@@ -5,6 +5,64 @@ from flask import render_template
 app = Flask(__name__)
 DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
 
+class Room:
+    table = 'AUDIENCES'
+    id = ['Int','ИД']
+    name = ['String', 'Аудитория']
+
+class Group:
+    table = 'GROUPS'
+    id = ['Int','ИД']
+    name = ['String', 'Группа']
+
+class Lesson:
+    table = 'LESSONS'
+    id = ['Int','ИД']
+    name = ['String', 'Пара']
+    order_number = ['Int', 'Номер']
+
+class Lesson_type:
+    table = 'LESSON_TYPES'
+    id = ['Int','ИД']
+    name = ['String', 'Тип']
+
+class Subject:
+    table = 'SUBJECTS'
+    id = ['Int','ИД']
+    name = ['String', 'Предмет']
+
+class Subject_group:
+    table = 'SUBJECT_GROUP'
+    subject_id = ['Ref', Subject]
+    group_id = ['Ref', Group]
+
+class Teacher:
+    table = 'TEACHERS'
+    id = ['Int','ИД']
+    name = ['String', 'Преподаватель']
+
+class Weekday:
+    table = 'WEEKDAYS'
+    id = ['Int','ИД']
+    name = ['String', 'День недели']
+    order_number = ['Int', 'Номер']
+
+class Subject_teacher:
+    table = 'SUBJECT_TEACHER'
+    subject_id = ['Ref', Subject]
+    teacher_id = ['Ref', Teacher]
+
+class Sched_Item:
+    table = 'SCHED_ITEMS'
+    id = ['Int','ИД']
+    lesson_id = ['Ref',Lesson]
+    subject_id = ['Ref', Subject]
+    audience_id = ['Ref', Room]
+    group_id = ['Ref', Group]
+    teacher_id = ['Ref', Teacher]
+    type_id = ['Ref', Lesson_type]
+    weekday_id = ['Ref', Weekday]
+
 @app.route("/")
 def hello():
     con = fdb.connect(
@@ -31,12 +89,12 @@ def hello():
             cur.execute('''select RDB$FIELD_NAME
                     from RDB$RELATION_FIELDS
                     where RDB$SYSTEM_FLAG = 0 and RDB$RELATION_NAME ='%s'
-                    order by RDB$FIELD_POSITION'''%str(selected_table))
+                    order by RDB$FIELD_POSITION'''%selected_table)
             for row in cur.fetchall():
                 str_name = str(row[0]).strip()
                 table_fields.append(str_name)
             print(table_fields)
-            cur.execute('select * from ' + str(selected_table))
+            cur.execute('select * from ' + selected_table)
         return render_template("index.html",
             tables = tables,
             result = cur.fetchall(),
