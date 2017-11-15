@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+      <title></title>
+  </head>
+  <body>
+    <form>
+        <select name="t">
+            {% for table in tables %}
+                <option {% if selected_table==table %} selected {% endif %}> {{ table }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Show table">
+    </form>
+    {% for row in result %}
+        {{ row }}
+        <br>
+    {% endfor %}
+  </body>
+</html>
