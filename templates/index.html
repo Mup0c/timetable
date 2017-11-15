@@ -1,7 +1,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
-      <title></title>
+      <title>I have paws</title>
   </head>
   <body>
     <form>
@@ -12,9 +12,23 @@
         </select>
         <input type="submit" value="Show table">
     </form>
-    {% for row in result %}
-        {{ row }}
-        <br>
-    {% endfor %}
+        <table>
+            <thead>
+              {% for field in table_fields %}
+                <th>
+                    {{ field }}
+                </th>
+              {% endfor %}
+             </thead>
+            {% for row in result %}
+                <tr>
+                {% for element in row %}
+                    <td>
+                        {{ element }}
+                    </td>
+                {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
   </body>
 </html>

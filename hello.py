@@ -17,7 +17,7 @@ def hello():
     try:
         cur = con.cursor()
 
-        cur.execute(''' select RDB$RELATION_NAME from RDB$RELATIONS
+        cur.execute('''select RDB$RELATION_NAME from RDB$RELATIONS
                         where (RDB$SYSTEM_FLAG = 0) AND (RDB$RELATION_TYPE = 0)
                         order by RDB$RELATION_NAME''')
         tables = []
@@ -27,9 +27,21 @@ def hello():
 
         selected_table = request.args.get('t', '')
         if selected_table in tables:
+            table_fields = []
+            cur.execute('''select RDB$FIELD_NAME
+                    from RDB$RELATION_FIELDS
+                    where RDB$SYSTEM_FLAG = 0 and RDB$RELATION_NAME ='%s'
+                    order by RDB$FIELD_POSITION'''%str(selected_table))
+            for row in cur.fetchall():
+                str_name = str(row[0]).strip()
+                table_fields.append(str_name)
+            print(table_fields)
             cur.execute('select * from ' + str(selected_table))
         return render_template("index.html",
-        tables = tables, result = cur.fetchall(), selected_table = selected_table)
+            tables = tables,
+            result = cur.fetchall(),
+            selected_table = selected_table,
+            table_fields = table_fields)
     finally:
         con.close()
 
