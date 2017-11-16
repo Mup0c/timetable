@@ -7,7 +7,7 @@
     <form>
         <select name="t">
             {% for table in tables %}
-                <option {% if selected_table==table %} selected {% endif %}> {{ table }}</option>
+                <option {% if selected_table.table==table %} selected {% endif %}> {{ table }}</option>
             {% endfor %}
         </select>
         <input type="submit" value="Show table">
