@@ -27,17 +27,17 @@ class queryBuilder:
             if isinstance(field, metadata.RefField):
                 self.query += ' left join ' + field.referenceTable.tableName + ' on '  + \
                               table.tableName + '.' + field.colName +  ' = ' + \
-                              field.referenceTable.tableName + '.' + field.referenceTable.id.colName + "\n"
+                              field.referenceTable.tableName + '.' + field.referenceTable.id.colName + '\n'
                 colsToSelect = colsToSelect.replace(table.tableName + "." + field.colName,
-                                                    field.referenceTable.tableName + '.' + field.referenceCol.colName, 1)
+                               field.referenceTable.tableName + '.' + field.referenceCol.colName, 1)
         self.query = self.query % colsToSelect
         return self.query
 
     def addSearchRequest(self, table, searchCol, searchRequest):
         if searchRequest != '':
             if isinstance(searchCol, metadata.RefField):
-                self.query += ' where ' + searchCol.referenceTable.tableName + '.' + searchCol.referenceCol.colName + ' like \'' + \
-                              searchRequest + '\''
+                self.query += ' where ' + searchCol.referenceTable.tableName + '.' + searchCol.referenceCol.colName + \
+                              ' like \'' + searchRequest + '\''
             else:
                 self.query += ' where ' + table.tableName + '.' + searchCol.colName + ' like \'' + \
                               searchRequest + '\''
@@ -81,25 +81,13 @@ def hello():
                     search_request = request.args.get('s', '', type=int)
                 else:
                     search_request = request.args.get('s', '')
-                print('-----------SELECTED COLUMN-------------')
-                print(selected_column)
-                print('-----------SELECTED COLUMN-------------')
-            print('-----------SELECTED TABLE-------------')
-            print(selected_table)
-            print('-----------SELECTED TABLE-------------')
             for field in selected_table.__dict__:
                 attr = getattr(selected_table,field)
                 if isinstance(attr,metadata.BaseField) or isinstance(attr, metadata.RefField):
                     meta.append(getattr(selected_table,field))
             query = queryBuilder(selected_table,meta, selected_column, str(search_request).replace('\'', '\'\'')).query
-            print('---------QUERY----------')
-            print(query)
-            print('---------QUERY----------')
             cur.execute(query)
             rows = cur.fetchall()
-        print('----------META------------')
-        print(meta)
-        print('----------META------------')
         return render_template("index.html",
             tables = tables,
             rows = rows,
