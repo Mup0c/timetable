@@ -6,8 +6,8 @@ from flask import render_template
 
 app = Flask(__name__)
 
-#DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
-DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
+DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
+#DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
 
 class queryBuilder:
     query = ''
@@ -70,7 +70,6 @@ def hello():
         ]
         selected_table = request.args.get('t', '')
         selected_column = request.args.get('c', '')
-        search_request = str(request.args.get('s', '')).replace('\'','')
         rows = []
         meta = []
         if selected_table in tables:
@@ -78,9 +77,9 @@ def hello():
             if selected_column in selected_table.__dict__:
                 selected_column = getattr(selected_table, selected_column)
                 if selected_column.type == 'int':
-                    search_request = str(request.args.get('s', '', type=int)).replace('\'', '')
+                    search_request = request.args.get('s', '', type=int)
                 else:
-                    search_request = str(request.args.get('s', '')).replace('\'', '')
+                    search_request = request.args.get('s', '')
                 print('-----------SELECTED COLUMN-------------')
                 print(selected_column)
                 print('-----------SELECTED COLUMN-------------')
@@ -93,7 +92,7 @@ def hello():
                 attr = getattr(selected_table,field)
                 if isinstance(attr,metadata.BaseField) or isinstance(attr, metadata.RefField):
                     meta.append(getattr(selected_table,field))
-            query = queryBuilder(selected_table,meta, selected_column, search_request).query
+            query = queryBuilder(selected_table,meta, selected_column, search_request.replace('\'', '\'\'')).query
             print('---------QUERY----------')
             print(query)
             print('---------QUERY----------')
