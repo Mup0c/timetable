@@ -1,3 +1,4 @@
+<!DOCTYPE HTML>
 <html>
   <head>
     <meta charset="UTF-8">
@@ -17,18 +18,28 @@
   </head>
   <body>
      <form>
-        <select name="t">
+        <select name="t" onchange="this.form.submit()">
            {% for table in tables %}
-              <option {% if selected_table.tableName==table %} selected {% endif %}> {{ table }}</option>
+              <option {% if selected_table.tableName==table %} selected {% endif %} >
+                 {{ table }}
+              </option>
            {% endfor %}
         </select>
-        <input type="submit" value="Show table">
+        <select name="c">
+           {% for field in meta %}
+              <option {% if selected_column.colName==field.colName %} selected {% endif %} value="{{field.colName}}">
+                 {{ field.viewedName }}
+              </option>
+           {% endfor %}
+        </select>
+        <input name = 's' value="{{ search_request }}">
+        <input type="submit" value="Найти">
      </form>
      <table>
         <thead>
-           {% for field in table_fields %}
+           {% for field in meta %}
               <th align="center">
-                  {{ field }}
+                  {{ field.viewedName }}
               </th>
           {% endfor %}
         </thead>

@@ -3,6 +3,7 @@ class RefField:
         self.colName = colName
         self.referenceTable = referenceTable
         self.referenceCol = referenceCol
+        self.viewedName = referenceCol.viewedName
 
 class BaseField:
     def __init__(self, colName, viewedName):
