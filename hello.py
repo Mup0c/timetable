@@ -51,7 +51,7 @@ def hello():
     dsn=DB_PATH,
     user='SYSDBA',
     password='masterkey',
-    charset='UTF8'
+    charset='UTF-8'
     )
 
     try:
@@ -70,13 +70,17 @@ def hello():
         ]
         selected_table = request.args.get('t', '')
         selected_column = request.args.get('c', '')
-        search_request = request.args.get('s', '')
+        search_request = str(request.args.get('s', '')).replace('\'','')
         rows = []
         meta = []
         if selected_table in tables:
             selected_table = getattr(metadata,selected_table)
             if selected_column in selected_table.__dict__:
                 selected_column = getattr(selected_table, selected_column)
+                if selected_column.type == 'int':
+                    search_request = str(request.args.get('s', '', type=int)).replace('\'', '')
+                else:
+                    search_request = str(request.args.get('s', '')).replace('\'', '')
                 print('-----------SELECTED COLUMN-------------')
                 print(selected_column)
                 print('-----------SELECTED COLUMN-------------')

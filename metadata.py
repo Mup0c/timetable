@@ -1,40 +1,40 @@
-class RefField:
-    def __init__(self, colName, referenceTable, referenceCol):
-        self.colName = colName
-        self.referenceTable = referenceTable
-        self.referenceCol = referenceCol
-        self.viewedName = referenceCol.viewedName
-
 class BaseField:
-    def __init__(self, colName, viewedName):
+    def __init__(self, colName, viewedName, type):
+        self.type = type
         self.colName = colName
         self.viewedName = viewedName
 
+class RefField(BaseField):
+    def __init__(self, colName, referenceTable, referenceCol):
+        super().__init__(colName, viewedName = referenceCol.viewedName, type = None)
+        self.referenceTable = referenceTable
+        self.referenceCol = referenceCol
+
 class AUDIENCES:
     tableName = 'AUDIENCES'
-    id = BaseField('id','ИД')
-    name = BaseField('name', 'Аудитория')
+    id = BaseField('id','ИД', 'int')
+    name = BaseField('name', 'Аудитория', 'str')
 
 class GROUPS:
     tableName = 'GROUPS'
-    id = BaseField('id','ИД')
-    name = BaseField('name', 'Группа')
+    id = BaseField('id','ИД', 'int')
+    name = BaseField('name', 'Группа', 'str')
 
 class LESSONS:
     tableName = 'LESSONS'
-    id = BaseField('id','ИД')
-    name = BaseField('name', 'Пара')
-    order_number = BaseField('order_number', 'Номер')
+    id = BaseField('id','ИД', 'int')
+    name = BaseField('name', 'Пара', 'str')
+    order_number = BaseField('order_number', 'Номер', 'str')
 
 class LESSON_TYPES:
     tableName = 'LESSON_TYPES'
-    id = BaseField('id','ИД')
-    name = BaseField('name', 'Тип')
+    id = BaseField('id','ИД', 'int')
+    name = BaseField('name', 'Тип', 'str')
 
 class SUBJECTS:
     tableName = 'SUBJECTS'
-    id = BaseField('id','ИД')
-    name = BaseField('name','Предмет')
+    id = BaseField('id','ИД', 'int')
+    name = BaseField('name','Предмет', 'str')
 
 class SUBJECT_GROUP:
     tableName = 'SUBJECT_GROUP'
@@ -43,14 +43,14 @@ class SUBJECT_GROUP:
 
 class TEACHERS:
     tableName = 'TEACHERS'
-    id = BaseField('id','ИД')
-    name = BaseField('name','Преподаватель')
+    id = BaseField('id','ИД', 'int')
+    name = BaseField('name','Преподаватель', 'str')
 
 class WEEKDAYS:
     tableName = 'WEEKDAYS'
-    id = BaseField('id','ИД')
-    name = BaseField('name', 'День недели')
-    order_number = BaseField('order_number', 'Номер')
+    id = BaseField('id','ИД', 'int')
+    name = BaseField('name', 'День недели', 'str')
+    order_number = BaseField('order_number', 'Номер', 'int')
 
 #ref = S_Reference(WEEKDAYS, "id")
 class SUBJECT_TEACHER():
@@ -60,7 +60,7 @@ class SUBJECT_TEACHER():
 
 class SCHED_ITEMS:
     tableName = 'SCHED_ITEMS'
-    id = BaseField('id','ИД')
+    id = BaseField('id','ИД', 'int')
     lesson_id = RefField('lesson_id', LESSONS, LESSONS.name)
     subject_id = RefField('subject_id', SUBJECTS, SUBJECTS.name)
     audience_id = RefField('audience_id', AUDIENCES, AUDIENCES.name)
