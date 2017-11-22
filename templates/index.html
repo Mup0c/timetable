@@ -1,34 +1,46 @@
 <html>
   <head>
     <meta charset="UTF-8">
-      <title>I have paws</title>
+    <title>I have paws</title>
+     <style type="text/css">
+        TABLE {
+            border-collapse: collapse;
+        }
+        TD, TH {
+            padding: 3px;
+            border: 1px solid black;
+        }
+        TH {
+            background: #b0e0e6;
+        }
+  </style>
   </head>
   <body>
-    <form>
+     <form>
         <select name="t">
-            {% for table in tables %}
-                <option {% if selected_table.tableName==table %} selected {% endif %}> {{ table }}</option>
-            {% endfor %}
+           {% for table in tables %}
+              <option {% if selected_table.tableName==table %} selected {% endif %}> {{ table }}</option>
+           {% endfor %}
         </select>
         <input type="submit" value="Show table">
-    </form>
-        <table>
-            <thead>
-              {% for field in table_fields %}
-                <th>
-                    {{ field }}
-                </th>
-              {% endfor %}
-             </thead>
-            {% for row in rows %}
-                <tr>
-                {% for element in row %}
-                    <td>
-                        {{ element }}
-                    </td>
-                {% endfor %}
-                </tr>
-            {% endfor %}
-        </table>
+     </form>
+     <table>
+        <thead>
+           {% for field in table_fields %}
+              <th align="center">
+                  {{ field }}
+              </th>
+          {% endfor %}
+        </thead>
+        {% for row in rows %}
+           <tr>
+           {% for element in row %}
+              <td align="center">
+                 {{ element }}
+              </td>
+           {% endfor %}
+           </tr>
+        {% endfor %}
+     </table>
   </body>
 </html>
