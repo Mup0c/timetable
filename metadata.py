@@ -1,63 +1,69 @@
-#decorator
+class RefField:
+    def __init__(self, colName, referenceTable, referenceCol):
+        self.colName = colName
+        self.referenceTable = referenceTable
+        self.referenceCol = referenceCol
+
+class BaseField:
+    def __init__(self, colName, viewedName):
+        self.colName = colName
+        self.viewedName = viewedName
+
 class AUDIENCES:
-    table = 'AUDIENCES'
-    id = ['Int','ИД']
-    name = ['String', 'Аудитория']
+    tableName = 'AUDIENCES'
+    id = BaseField('id','ИД')
+    name = BaseField('name', 'Аудитория')
 
 class GROUPS:
-    table = 'GROUPS'
-    id = ['Int','ИД']
-    name = ['String', 'Группа']
+    tableName = 'GROUPS'
+    id = BaseField('id','ИД')
+    name = BaseField('name', 'Группа')
 
 class LESSONS:
-    table = 'LESSONS'
-    id = ['Int','ИД']
-    name = ['String', 'Пара']
-    order_number = ['Int', 'Номер']
+    tableName = 'LESSONS'
+    id = BaseField('id','ИД')
+    name = BaseField('name', 'Пара')
+    order_number = BaseField('order_number', 'Номер')
 
 class LESSON_TYPES:
-    table = 'LESSON_TYPES'
-    id = ['Int','ИД']
-    name = ['String', 'Тип']
+    tableName = 'LESSON_TYPES'
+    id = BaseField('id','ИД')
+    name = BaseField('name', 'Тип')
 
 class SUBJECTS:
-    table = 'SUBJECTS'
-    id = ['Int','ИД']
-    name = ['String', 'Предмет']
+    tableName = 'SUBJECTS'
+    id = BaseField('id','ИД')
+    name = BaseField('name','Предмет')
 
 class SUBJECT_GROUP:
-    table = 'SUBJECT_GROUP'
-    subject_id = ['Ref', SUBJECTS]
-    group_id = ['Ref', GROUPS]
+    tableName = 'SUBJECT_GROUP'
+    subject_id = RefField('subject_id', SUBJECTS, SUBJECTS.name)
+    group_id = RefField('group_id', GROUPS, GROUPS.name)
 
 class TEACHERS:
-    table = 'TEACHERS'
-    id = ['Int','ИД']
-    name = ['String', 'Преподаватель']
+    tableName = 'TEACHERS'
+    id = BaseField('id','ИД')
+    name = BaseField('name','Преподаватель')
 
 class WEEKDAYS:
-    table = 'WEEKDAYS'
-    columns = {}
-    columns["id"] = 'ИД'
-    columns["String"] = 'День недели'
-    columns["order_number"] = 'Номер'
-    id = ['Int']
-    name = ['String']
-    order_number = ['Int', 'Номер']
+    tableName = 'WEEKDAYS'
+    id = BaseField('id','ИД')
+    name = BaseField('name', 'День недели')
+    order_number = BaseField('order_number', 'Номер')
 
 #ref = S_Reference(WEEKDAYS, "id")
-class SUBJECT_TEACHER:
-    table = 'SUBJECT_TEACHER'
-    subject_id = ['Ref', SUBJECTS]
-    teacher_id = ['Ref', TEACHERS]
+class SUBJECT_TEACHER():
+    tableName = 'SUBJECT_TEACHER'
+    subject_id = RefField('subject_id', SUBJECTS, SUBJECTS.name)
+    teacher_id = RefField('teacher_id', TEACHERS, TEACHERS.name)
 
 class SCHED_ITEMS:
-    table = 'SCHED_ITEMS'
-    id = ['Int','ИД']
-    lesson_id = ['Ref',LESSONS]
-    subject_id = ['Ref', SUBJECTS]
-    audience_id = ['Ref', AUDIENCES]
-    group_id = ['Ref', GROUPS]
-    teacher_id = ['Ref', TEACHERS]
-    type_id = ['Ref', LESSON_TYPES]
-    weekday_id = ['Ref', WEEKDAYS]
+    tableName = 'SCHED_ITEMS'
+    id = BaseField('id','ИД')
+    lesson_id = RefField('lesson_id', LESSONS, LESSONS.name)
+    subject_id = RefField('subject_id', SUBJECTS, SUBJECTS.name)
+    audience_id = RefField('audience_id', AUDIENCES, AUDIENCES.name)
+    group_id = RefField('group_id', GROUPS, GROUPS.name)
+    teacher_id = RefField('teacher_id', TEACHERS, TEACHERS.name)
+    type_id = RefField('type_id', LESSON_TYPES, LESSON_TYPES.name)
+    weekday_id = RefField('weekday_id', WEEKDAYS, WEEKDAYS.name)

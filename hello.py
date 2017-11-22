@@ -1,10 +1,38 @@
 import fdb
+import metadata
 from flask import Flask
 from flask import request
 from flask import render_template
-import metadata
+
 app = Flask(__name__)
-DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
+#DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
+
+DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
+
+class queryBuilder:
+    query = ''
+
+    def __init__(self, table, meta):
+        self.createQuery(table, meta)
+        self.joinTable(table, meta)
+
+    def createQuery(self, table, meta):
+        self.query = 'select %s from ' + table.tableName
+        return self.query
+
+    def joinTable(self, table, meta):
+        colsToSelect = ','.join(table.tableName + "." + field.colName for field in meta)
+        for field in meta:
+            if isinstance(field, metadata.RefField):
+                self.query += ' left join ' + field.referenceTable.tableName + ' on '  + \
+                              table.tableName + '.' + field.colName +  ' = ' + \
+                              field.referenceTable.tableName + '.' + field.referenceTable.id.colName + "\n"
+                colsToSelect = colsToSelect.replace(table.tableName + "." + field.colName,
+                                                    field.referenceTable.tableName + '.' + field.referenceCol.colName, 1)
+        self.query = self.query % colsToSelect
+        return self.query
+
+
 
 @app.route("/")
 def hello():
@@ -17,32 +45,45 @@ def hello():
 
     try:
         cur = con.cursor()
-        query = '''select RDB$RELATION_NAME from RDB$RELATIONS
-                        where (RDB$SYSTEM_FLAG = 0) AND (RDB$RELATION_TYPE = 0)
-                        order by RDB$RELATION_NAME'''
-        cur.execute(query)
-        tables = []
-        for row in cur.fetchall():
-            str_name = str(row[0]).strip()
-            tables.append(str_name)
-
+        tables = [
+            'AUDIENCES',
+            'GROUPS',
+            'LESSONS',
+            'LESSON_TYPES',
+            'SCHED_ITEMS',
+            'SUBJECTS',
+            'SUBJECT_GROUP',
+            'SUBJECT_TEACHER',
+            'TEACHERS',
+            'WEEKDAYS'
+        ]
         selected_table = request.args.get('t', '')
+        table_fields = []
+        rows = []
+        meta = []
         if selected_table in tables:
             selected_table = getattr(metadata,selected_table)
-
-            table_fields = []
-            query = '''select RDB$FIELD_NAME
-                          from RDB$RELATION_FIELDS
-                          where RDB$SYSTEM_FLAG = 0 and RDB$RELATION_NAME ='%s'
-                          order by RDB$FIELD_POSITION'''%selected_table.table
-            i = 0
-            for field in selected_table.columns:
-                table_fields.append(selected_table.columns[field])
-
-            cur.execute('select * from ' + selected_table.table)
+            print('------------------------')
+            print(selected_table)
+            for field in selected_table.__dict__:
+                if isinstance(getattr(selected_table,field),metadata.BaseField):
+                    meta.append(getattr(selected_table,field))
+                    table_fields.append(getattr(selected_table,field).viewedName)
+                if isinstance(getattr(selected_table,field),metadata.RefField):
+                    meta.append(getattr(selected_table, field))
+                    table_fields.append(getattr(selected_table,field).referenceCol.viewedName)
+            #cur.execute('select * from ' + selected_table.tableName)
+            query = queryBuilder(selected_table,meta).query
+            print('---------QUERY\/----------')
+            print(query)
+            print('---------QUERY/\--------')
+            cur.execute(query)
+            rows = cur.fetchall()
+        print('------------------------')
+        print(meta)
         return render_template("index.html",
             tables = tables,
-            result = cur.fetchall(),
+            rows = rows,
             selected_table = selected_table,
             table_fields = table_fields)
     finally:
