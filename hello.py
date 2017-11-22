@@ -70,6 +70,7 @@ def hello():
         ]
         selected_table = request.args.get('t', '')
         selected_column = request.args.get('c', '')
+        search_request = ''
         rows = []
         meta = []
         if selected_table in tables:
@@ -83,8 +84,6 @@ def hello():
                 print('-----------SELECTED COLUMN-------------')
                 print(selected_column)
                 print('-----------SELECTED COLUMN-------------')
-            else:
-                search_request = ''
             print('-----------SELECTED TABLE-------------')
             print(selected_table)
             print('-----------SELECTED TABLE-------------')
@@ -92,7 +91,7 @@ def hello():
                 attr = getattr(selected_table,field)
                 if isinstance(attr,metadata.BaseField) or isinstance(attr, metadata.RefField):
                     meta.append(getattr(selected_table,field))
-            query = queryBuilder(selected_table,meta, selected_column, search_request.replace('\'', '\'\'')).query
+            query = queryBuilder(selected_table,meta, selected_column, str(search_request).replace('\'', '\'\'')).query
             print('---------QUERY----------')
             print(query)
             print('---------QUERY----------')
