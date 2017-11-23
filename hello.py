@@ -22,15 +22,16 @@ class queryBuilder:
         return self.query
 
     def joinTable(self, table, meta):
-        colsToSelect = ','.join(table.tableName + "." + field.colName for field in meta)
+        colsToSelect = []
         for field in meta:
             if isinstance(field, metadata.RefField):
                 self.query += ' left join ' + field.referenceTable.tableName + ' on '  + \
                               table.tableName + '.' + field.colName +  ' = ' + \
                               field.referenceTable.tableName + '.' + field.referenceTable.id.colName + '\n'
-                colsToSelect = colsToSelect.replace(table.tableName + "." + field.colName,
-                               field.referenceTable.tableName + '.' + field.referenceCol.colName, 1)
-        self.query = self.query % colsToSelect
+                colsToSelect.append(field.referenceTable.tableName + '.' + field.referenceCol.colName)
+            else:
+                colsToSelect.append(table.tableName + '.' + field.colName)
+        self.query = self.query % ','.join(colsToSelect)
         return self.query
 
     def addSearchRequest(self, table, searchCol, searchRequest):
@@ -87,6 +88,11 @@ def hello():
             query = queryBuilder(selected_table,meta, selected_column, str(search_request).replace('\'', '\'\'')).query
             cur.execute(query)
             rows = cur.fetchall()
+        print(query)
+        print(search_request)
+        print(search_request)
+        print(search_request)
+        print(search_request)
         return render_template("index.html",
             tables = tables,
             rows = rows,
@@ -96,3 +102,4 @@ def hello():
             meta = meta)
     finally:
         con.close()
+#app.run(debug=True)
