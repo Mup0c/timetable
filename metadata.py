@@ -52,8 +52,7 @@ class WEEKDAYS:
     name = BaseField('name', 'День недели', 'str')
     order_number = BaseField('order_number', 'Номер', 'int')
 
-#ref = S_Reference(WEEKDAYS, "id")
-class SUBJECT_TEACHER():
+class SUBJECT_TEACHER:
     tableName = 'SUBJECT_TEACHER'
     subject_id = RefField('subject_id', SUBJECTS, SUBJECTS.name)
     teacher_id = RefField('teacher_id', TEACHERS, TEACHERS.name)

@@ -35,12 +35,11 @@ class queryBuilder:
 
     def addSearchRequest(self, table, searchCol, searchRequest):
         if searchRequest != '':
+            self.query += ' where %s.%s like \'%s\''
             if isinstance(searchCol, metadata.RefField):
-                self.query += ' where ' + searchCol.referenceTable.tableName + '.' + searchCol.referenceCol.colName + \
-                              ' like \'' + searchRequest + '\''
+                self.query = self.query % (searchCol.referenceTable.tableName, searchCol.referenceCol.colName, searchRequest)
             else:
-                self.query += ' where ' + table.tableName + '.' + searchCol.colName + ' like \'' + \
-                              searchRequest + '\''
+                self.query = self.query % (table.tableName, searchCol.colName, searchRequest)
         return self.query
 
 
@@ -97,4 +96,3 @@ def hello():
             meta = meta)
     finally:
         con.close()
-
