@@ -6,16 +6,16 @@ from flask import render_template
 
 app = Flask(__name__)
 
-DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
-#DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
+#DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
+DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
 
 class queryBuilder:
     query = ''
 
-    def __init__(self, table, meta, searchCol, searchRequest):
+    def __init__(self, table, meta, searchCol, searchRequest, operator):
         self.createQuery(table, meta)
         self.joinTable(table, meta)
-        self.addSearchRequest(table, searchCol, searchRequest)
+        self.addSearchRequest(table, searchCol, searchRequest, operator)
 
     def createQuery(self, table, meta):
         self.query = 'select %s from ' + table.tableName
@@ -34,13 +34,14 @@ class queryBuilder:
         self.query = self.query % ','.join(colsToSelect)
         return self.query
 
-    def addSearchRequest(self, table, searchCol, searchRequest):
+    def addSearchRequest(self, table, searchCol, searchRequest, operator):
         if searchRequest != '':
-            self.query += ' where %s.%s like \'%s\''
+            self.query += ' where %s.%s %s \'%s\''
             if isinstance(searchCol, metadata.RefField):
-                self.query = self.query % (searchCol.referenceTable.tableName, searchCol.referenceCol.colName, searchRequest)
+                self.query = self.query % (searchCol.referenceTable.tableName, searchCol.referenceCol.colName, operator,
+                                           searchRequest)
             else:
-                self.query = self.query % (table.tableName, searchCol.colName, searchRequest)
+                self.query = self.query % (table.tableName, searchCol.colName, operator, searchRequest)
         return self.query
 
 
@@ -68,8 +69,18 @@ def hello():
             'TEACHERS',
             'WEEKDAYS'
         ]
+        operators = [
+            '=',
+            '>',
+            '>=',
+            '<',
+            '<='
+        ]
         selected_table = request.args.get('t', '')
         selected_column = request.args.get('c', '')
+        selected_operator = request.args.get('op', '')
+        
+        #######ERRORS /\ check for in dict
         search_request = ''
         rows = []
         meta = []
@@ -85,21 +96,22 @@ def hello():
                 attr = getattr(selected_table,field)
                 if isinstance(attr,metadata.BaseField) or isinstance(attr, metadata.RefField):
                     meta.append(getattr(selected_table,field))
-            query = queryBuilder(selected_table,meta, selected_column, str(search_request).replace('\'', '\'\'')).query
+            query = queryBuilder(selected_table,meta, selected_column, str(search_request).replace('\'', '\'\''),
+                                 selected_operator).query
+            print('---------QUERY----------')
+            print(query)
+            print('---------QUERY----------')
             cur.execute(query)
             rows = cur.fetchall()
-        print(query)
-        print(search_request)
-        print(search_request)
-        print(search_request)
-        print(search_request)
         return render_template("index.html",
             tables = tables,
             rows = rows,
             selected_table = selected_table,
             selected_column = selected_column,
+            selected_operator = selected_operator,
             search_request = search_request,
-            meta = meta)
+            meta = meta,
+            operators = operators)
     finally:
         con.close()
 #app.run(debug=True)
