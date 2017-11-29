@@ -1,3 +1,24 @@
+tables = [
+            'AUDIENCES',
+            'GROUPS',
+            'LESSONS',
+            'LESSON_TYPES',
+            'SCHED_ITEMS',
+            'SUBJECTS',
+            'SUBJECT_GROUP',
+            'SUBJECT_TEACHER',
+            'TEACHERS',
+            'WEEKDAYS'
+        ]
+
+operators = [
+            '=',
+            '>',
+            '>=',
+            '<',
+            '<='
+            ]
+
 class BaseField:
     def __init__(self, colName, viewedName, type):
         self.type = type

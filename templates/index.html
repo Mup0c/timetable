@@ -26,21 +26,24 @@
            {% endfor %}
         </select>
         <br><br>
-        <select name="c">
-           {% for field in meta %}
-              <option {% if selected_column.colName==field.colName %} selected {% endif %} value="{{field.colName}}">
-                 {{ field.viewedName }}
-              </option>
-           {% endfor %}
-        </select>
-        <select name="op">
-           {% for operator in operators %}
-              <option {% if selected_operator==operator %} selected {% endif %}>
-                 {{ operator }}
-              </option>
-           {% endfor %}
-        </select>
-        <input name = 's' value="{{ search_request }}">
+        {% for i in range(search.count) %}
+           <select name={{'c' + i|string}}>
+              {% for field in meta %}
+                 <option {% if search.columns[i].colName==field.colName %} selected {% endif %} value="{{ field.colName }}">
+                    {{ field.viewedName }}
+                 </option>
+              {% endfor %}
+           </select>
+           <select name={{'op' + i|string}}>
+              {% for operator in operators %}
+                 <option {% if search.operators[i]==operator %} selected {% endif %}>
+                    {{ operator }}
+                 </option>
+              {% endfor %}
+            </select>
+           <input name={{'s' + i|string}} value="{{ search.requests[i] }}">
+         <br><br>
+        {% endfor %}
         <input type="submit" value="Найти">
      </form>
      <br>
