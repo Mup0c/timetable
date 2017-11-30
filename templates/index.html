@@ -42,8 +42,16 @@
               {% endfor %}
             </select>
            <input name={{'s' + i|string}} value="{{ search.requests[i] }}">
-         <br><br>
+        <br><br>
         {% endfor %}
+        <input type='hidden' name='cnt' value="{{search.count}}">
+        <button>
+            <a href = {{ changeArg("cnt", search.count + 1) }}>Добавить</a>
+        </button>
+        <button>
+            <a href = {{ changeArg("cnt", search.count - 1) }}>Удалить</a>
+        </button>
+        <br>
         <input type="submit" value="Найти">
      </form>
      <br>

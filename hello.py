@@ -4,6 +4,7 @@ from metadata import *
 from flask import Flask
 from flask import request
 from flask import render_template
+from werkzeug.urls import url_encode
 
 app = Flask(__name__)
 
@@ -16,11 +17,8 @@ class Search:
         self.requests = []
         self.columns = []
         self.operators = []
-        self.count = 2
-        try:
-            self.count += int(request.args.get('cnt', '', type=int)) ###########
-        except:
-            pass
+        self.count = 0
+        self.count += request.args.get('cnt', 0, type=int)
         for i in range(self.count):
             temp_col = request.args.get('c' + str(i), '')
             if temp_col in table.__dict__:
@@ -85,6 +83,15 @@ class QueryBuilder:
             self.query += ' where ' + ' and '.join(request)
         return self.query
 
+@app.template_global()
+def changeArg(arg, val):
+    print('---------changeArg----------')
+    print(arg)
+    print(val)
+    print('---------changeArg----------')
+    args = request.args.copy()
+    args[arg] = val
+    return '{}?{}'.format(request.path, url_encode(args))
 
 
 @app.route("/")
@@ -98,12 +105,8 @@ def hello():
 
     try:
         cur = con.cursor()
+
         selected_table = request.args.get('t', '')
-        '''
-        selected_column = request.args.get('c', '')
-        selected_operator = request.args.get('op', '')
-        search_request = ''
-        '''
         rows = []
         meta = []
         search = Search(getattr(metadata, tables[0])) #check
@@ -116,14 +119,6 @@ def hello():
             print(search.columns)
             print(search.operators)
             print('---------search----------')
-            '''
-            if selected_column in selected_table.__dict__:
-                selected_column = getattr(selected_table, selected_column)
-                if selected_column.type == 'int':
-                    search_request = request.args.get('s', '', type=int)
-                else:
-                    search_request = request.args.get('s', '')
-            '''
             for field in selected_table.__dict__:
                 attr = getattr(selected_table,field)
                 if isinstance(attr,metadata.BaseField) or isinstance(attr, metadata.RefField):
