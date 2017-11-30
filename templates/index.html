@@ -46,29 +46,30 @@
         {% endfor %}
         <input type="submit" value="Найти">
         <input type="hidden" name="cnt" value="{{search.count}}">
+        <input type="hidden" name="srt">
         <input type="submit" value="Добавить" onclick="cnt.value={{search.count + 1}}">
         {% if search.count > 1 %}
         <input type="submit" value="Удалить" onclick="cnt.value={{search.count - 1}}">
         {% endif %}
-     </form>
-     <br>
-     <table>
-        <thead>
-           {% for field in meta %}
-              <th align="center">
-                  {{ field.viewedName }}
-              </th>
-          {% endfor %}
-        </thead>
-        {% for row in rows %}
-           <tr>
-           {% for element in row %}
-              <td align="center">
-                 {{ element }}
-              </td>
+        <br>
+        <table>
+           <thead>
+              {% for field in meta %}
+                 <th align="center">
+                    <a href = {{ changeArg("srt", field.colName) }}>{{ field.viewedName }}</a>
+                 </th>
+             {% endfor %}
+           </thead>
+           {% for row in rows %}
+              <tr>
+              {% for element in row %}
+                 <td align="center">
+                    {{ element }}
+                 </td>
+              {% endfor %}
+              </tr>
            {% endfor %}
-           </tr>
-        {% endfor %}
-     </table>
+        </table>
+     </form>
   </body>
 </html>
