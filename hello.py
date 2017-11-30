@@ -18,7 +18,7 @@ class Search:
         self.columns = []
         self.operators = []
         self.count = 0
-        self.count += request.args.get('cnt', 0, type=int)
+        self.count += getUnsigned(request.args.get('cnt', 1, type=int))
         for i in range(self.count):
             temp_col = request.args.get('c' + str(i), '')
             if temp_col in table.__dict__:
@@ -35,10 +35,6 @@ class Search:
                 self.operators.append(temp_op)
             else:
                 self.operators.append(operators[0])
-
-
-
-
 
 class QueryBuilder:
     query = ''
@@ -83,6 +79,9 @@ class QueryBuilder:
             self.query += ' where ' + ' and '.join(request)
         return self.query
 
+def getUnsigned(num):
+    return int((abs(num) + num) / 2)
+
 @app.template_global()
 def changeArg(arg, val):
     print('---------changeArg----------')
@@ -109,7 +108,7 @@ def hello():
         selected_table = request.args.get('t', '')
         rows = []
         meta = []
-        search = Search(getattr(metadata, tables[0])) #check
+        search = Search(getattr(metadata, tables[0]))
         if selected_table in tables:
             selected_table = getattr(metadata,selected_table)
             search = Search(selected_table)
