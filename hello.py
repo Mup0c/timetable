@@ -11,18 +11,6 @@ app = Flask(__name__)
 #DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
 DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
 
-
-
-
-"""
-добавить тип int str ordering и делать если ордеринг еще один жоин, сорт тоже делать по нему
-"""
-
-
-
-
-
-
 class Search:
 
     def __init__(self, table):
@@ -96,10 +84,21 @@ class QueryBuilder:
         col = request.args.get('srt','')
         if col in table.__dict__:
             col = getattr(table, col)
-            if isinstance(col, metadata.RefField):
-                self.query += ' order by %s.%s' % (col.referenceTable.tableName, col.referenceCol.colName)
-            elif isinstance(col, metadata.BaseField):
-                self.query += ' order by %s.%s' % (table.tableName, col.colName)
+            if col in meta:
+                if isinstance(col, metadata.RefField):
+                    tname = col.referenceTable.tableName
+                    cname = col.referenceCol.colName
+                    ctype = col.referenceCol.type
+                else:
+                    tname = table.tableName
+                    cname = col.colName
+                    ctype = col.type
+                self.query += ' order by %s.%s'
+                if ctype == "reford":
+                    self.query += ', %s.%s'
+                    self.query = self.query % (tname, "order_number", tname, cname)
+                else:
+                    self.query = self.query % (tname, cname)
         return self.query
 
 def getUnsigned(num):
