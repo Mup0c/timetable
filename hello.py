@@ -1,5 +1,6 @@
 import fdb
 import metadata
+from math import ceil
 from metadata import *
 from flask import Flask
 from flask import request
@@ -11,6 +12,21 @@ app = Flask(__name__)
 #DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
 DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
 
+class Paging:
+
+    def __init__(self, cur, table):
+        cur.execute('select count(*) from ' + table.tableName)
+        self.rowsNum = int(cur.fetchall()[0][0])
+        self.OnPage = makeUnsigned(request.args.get('onpage', 5, type=int))
+        if self.OnPage > 10000: self.OnPage = 10000
+        self.pagesNum = int(ceil(self.rowsNum / self.OnPage))
+        self.page = request.args.get('page', 0, type=int)
+        if not self.page in range(self.pagesNum):
+            self.page = 1
+        print('---------rowsNum----------')
+        print(self.rowsNum)
+        print('---------rowsNum----------')
+
 class Search:
 
     def __init__(self, table):
@@ -18,7 +34,8 @@ class Search:
         self.columns = []
         self.operators = []
         self.count = 0
-        self.count += getUnsigned(request.args.get('cnt', 1, type=int))
+        self.count += makeUnsigned(request.args.get('cnt', 1, type=int))
+        if self.count == 0: self.count = 1
         for i in range(self.count):
             temp_col = request.args.get('c' + str(i), '')
             if temp_col in table.__dict__:
@@ -39,11 +56,12 @@ class Search:
 class QueryBuilder:
     query = ''
 
-    def __init__(self, table, meta, search):
+    def __init__(self, table, meta, search, paging):
         self.createQuery(table, meta)
         self.joinTable(table, meta)
         self.addSearchRequest(table, search)
         self.addSort(table, meta)
+        self.addPage(paging)
 
     def createQuery(self, table, meta):
         self.query = 'select %s from ' + table.tableName
@@ -84,24 +102,33 @@ class QueryBuilder:
         col = request.args.get('srt','')
         if col in table.__dict__:
             col = getattr(table, col)
-            if col in meta:
-                if isinstance(col, metadata.RefField):
-                    tname = col.referenceTable.tableName
-                    cname = col.referenceCol.colName
-                    ctype = col.referenceCol.type
-                else:
-                    tname = table.tableName
-                    cname = col.colName
-                    ctype = col.type
-                self.query += ' order by %s.%s'
-                if ctype == "reford":
-                    self.query += ', %s.%s'
-                    self.query = self.query % (tname, "order_number", tname, cname)
-                else:
-                    self.query = self.query % (tname, cname)
+        else:
+            col = meta[0]
+        if col in meta:
+            if isinstance(col, metadata.RefField):
+                tname = col.referenceTable.tableName
+                cname = col.referenceCol.colName
+                ctype = col.referenceCol.type
+            else:
+                tname = table.tableName
+                cname = col.colName
+                ctype = col.type
+            self.query += ' order by %s.%s'
+            if ctype == "reford":
+                self.query += ', %s.%s'
+                self.query = self.query % (tname, "order_number", tname, cname)
+            else:
+                self.query = self.query % (tname, cname)
         return self.query
 
-def getUnsigned(num):
+    def addPage(self, paging):
+        self.query += ' offset %d rows fetch next %d rows only'
+        self.query = self.query % (paging.OnPage*paging.page, paging.OnPage)
+        return self.query
+
+
+
+def makeUnsigned(num):
     return int((abs(num) + num) / 2)
 
 @app.template_global()
@@ -126,37 +153,38 @@ def hello():
 
     try:
         cur = con.cursor()
-
-        selected_table = request.args.get('t', '')
-        rows = []
         meta = []
-        search = Search(getattr(metadata, tables[0]))
+        selected_table = request.args.get('t', '')
         if selected_table in tables:
             selected_table = getattr(metadata,selected_table)
-            search = Search(selected_table)
-            print('---------search----------')
-            print(search.count)
-            print(search.requests)
-            print(search.columns)
-            print(search.operators)
-            print('---------search----------')
-            for field in selected_table.__dict__:
-                attr = getattr(selected_table,field)
-                if isinstance(attr,metadata.BaseField) or isinstance(attr, metadata.RefField):
-                    meta.append(getattr(selected_table,field))
-            query = QueryBuilder(selected_table, meta, search).query
-            print('---------QUERY----------')
-            print(query)
-            print('---------QUERY----------')
-            cur.execute(query)
-            rows = cur.fetchall()
+        else:
+            selected_table = getattr(metadata, tables[0])
+        paging = Paging(cur, selected_table)
+        search = Search(selected_table)
+        print('---------search----------')
+        print(search.count)
+        print(search.requests)
+        print(search.columns)
+        print(search.operators)
+        print('---------search----------')
+        for field in selected_table.__dict__:
+            attr = getattr(selected_table,field)
+            if isinstance(attr,metadata.BaseField) or isinstance(attr, metadata.RefField):
+                meta.append(getattr(selected_table,field))
+        query = QueryBuilder(selected_table, meta, search, paging).query
+        print('---------QUERY----------')
+        print(query)
+        print('---------QUERY----------')
+        cur.execute(query)
+        rows = cur.fetchall()
         return render_template("index.html",
             tables = tables,
             operators = operators,
             selected_table = selected_table,
             rows = rows,
             search = search,
-            meta = meta
+            meta = meta,
+            paging = paging
             )
     finally:
         con.close()

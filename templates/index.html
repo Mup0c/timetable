@@ -14,7 +14,7 @@
         TH {
             background: #b0e0e6;
         }
-  </style>
+     </style>
   </head>
   <body>
      <form>
@@ -47,11 +47,12 @@
         <input type="submit" value="Найти">
         <input type="hidden" name="cnt" value="{{search.count}}">
         <input type="hidden" name="srt">
+        <input type="hidden" name="page" value="{{paging.page}}">
         <input type="submit" value="Добавить" onclick="cnt.value={{search.count + 1}}">
         {% if search.count > 1 %}
         <input type="submit" value="Удалить" onclick="cnt.value={{search.count - 1}}">
         {% endif %}
-        <br>
+        <br><br>
         <table>
            <thead>
               {% for field in meta %}
@@ -70,6 +71,17 @@
               </tr>
            {% endfor %}
         </table>
+        <br>
+        <a>Строк на страницу: </a>
+        <input type="number" name="onpage" min="1" max="10000" value={{ paging.OnPage }} onchange="this.form.submit()">
+        <br>
+        <br>
+        <a>Текущая страница: {{ paging.page + 1 }}</a>
+        <br>
+        <br>
+        {% for page in range(paging.pagesNum) %}
+           <a href = {{ changeArg("page",  page ) }}>{{ page + 1 }}</a>
+        {% endfor %}
      </form>
   </body>
 </html>
