@@ -9,20 +9,20 @@ from werkzeug.urls import url_encode
 
 app = Flask(__name__)
 
-#DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
-DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
+DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
+#DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
 
 class Paging:
 
     def __init__(self, cur, table):
         cur.execute('select count(*) from ' + table.tableName)
         self.rowsNum = int(cur.fetchall()[0][0])
-        self.OnPage = makeUnsigned(request.args.get('onpage', 5, type=int))
+        self.OnPage = makeNat(request.args.get('onpage', 5, type=int))
         if self.OnPage > 10000: self.OnPage = 10000
         self.pagesNum = int(ceil(self.rowsNum / self.OnPage))
         self.page = request.args.get('page', 0, type=int)
         if not self.page in range(self.pagesNum):
-            self.page = 1
+            self.page = 0
         print('---------rowsNum----------')
         print(self.rowsNum)
         print('---------rowsNum----------')
@@ -34,8 +34,8 @@ class Search:
         self.columns = []
         self.operators = []
         self.count = 0
-        self.count += makeUnsigned(request.args.get('cnt', 1, type=int))
-        if self.count == 0: self.count = 1
+        self.count += makeNat(request.args.get('cnt', 1, type=int))
+        if self.count > 14: self.count = 14
         for i in range(self.count):
             temp_col = request.args.get('c' + str(i), '')
             if temp_col in table.__dict__:
@@ -43,7 +43,7 @@ class Search:
                 if self.columns[-1].type == 'int':
                     self.requests.append(request.args.get('s' + str(i), '', type=int))
                 else:
-                    self.requests.append(str(request.args.get('s' + str(i), '')).replace('\'', '\'\''))
+                    self.requests.append(request.args.get('s' + str(i), ''))
             else:
                 self.columns.append('')
                 self.requests.append('')
@@ -88,10 +88,10 @@ class QueryBuilder:
                 if isinstance(search.columns[i], metadata.RefField):
                     request[-1] = request[-1] % (search.columns[i].referenceTable.tableName,
                                                search.columns[i].referenceCol.colName,
-                                               search.operators[i], search.requests[i])
+                                               search.operators[i], str(search.requests[i]).replace('\'', '\'\''))
                 elif isinstance(search.columns[i], metadata.BaseField):
                     request[-1] = request[-1] % (table.tableName, search.columns[i].colName,
-                                               search.operators[i], search.requests[i])
+                                               search.operators[i], str(search.requests[i]).replace('\'', '\'\''))
                 else:
                     request.pop()
         if request != []:
@@ -118,6 +118,8 @@ class QueryBuilder:
                 self.query += ', %s.%s'
                 self.query = self.query % (tname, "order_number", tname, cname)
             else:
+                print('AAAAAAAAAAAAA')
+                print(self.query)
                 self.query = self.query % (tname, cname)
         return self.query
 
@@ -128,8 +130,10 @@ class QueryBuilder:
 
 
 
-def makeUnsigned(num):
-    return int((abs(num) + num) / 2)
+def makeNat(num):
+    a = int((abs(num) + num) / 2)
+    if a == 0: a = 1;
+    return a
 
 @app.template_global()
 def changeArg(arg, val):
