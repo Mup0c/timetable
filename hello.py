@@ -27,9 +27,6 @@ class Paging:
         self.page = request.args.get('page', 0, type=int)
         if not self.page in range(self.pagesNum):
             self.page = 0
-        print('---------rowsNum----------')
-        print(self.rowsNum)
-        print('---------rowsNum----------')
 
 class Search:
 
@@ -65,7 +62,7 @@ class QueryBuilder:
         self.joinTable(table, meta)
         self.addSearchRequest(table, search)
         self.addSort(table, meta)
-        self.addPage(paging, table)
+        self.addPage(paging)
 
     def createQuery(self, table, meta):
         self.query = 'select %s from ' + table.tableName
@@ -130,7 +127,7 @@ class QueryBuilder:
                 self.query = self.query % (tname, cname)
         return self.query
 
-    def addPage(self, paging, table):
+    def addPage(self, paging):
         paging.nextInit(self.countQuery)
         self.query += ' offset %d rows fetch next %d rows only'
         self.query = self.query % (paging.OnPage*paging.page, paging.OnPage)
@@ -145,13 +142,16 @@ def makeNat(num):
 
 @app.template_global()
 def changeArg(arg, val):
-    print('---------changeArg----------')
-    print(arg)
-    print(val)
-    print('---------changeArg----------')
     args = request.args.copy()
     args[arg] = val
     return '{}?{}'.format(request.path, url_encode(args))
+
+@app.template_global()
+def getModifyPageUrl(table, id):
+    args = {}
+    args['t'] = table
+    args['id'] = id
+    return '/modify' + '{}?{}'.format(request.path, url_encode(args))
 
 
 @app.route("/")
@@ -196,8 +196,12 @@ def hello():
             rows = rows,
             search = search,
             meta = meta,
-            paging = paging
+            paging = paging,
             )
     finally:
         con.close()
+
+@app.route("/modify/")
+def modif():
+    pass
 #app.run(debug=True)

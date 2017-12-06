@@ -59,7 +59,7 @@
                  <th align="center">
                     <a href = {{ changeArg("srt", field.colName) }}>{{ field.viewedName }}</a>
                  </th>
-             {% endfor %}
+              {% endfor %}
            </thead>
            {% for row in rows %}
               <tr>
@@ -68,6 +68,9 @@
                     {{ element }}
                  </td>
               {% endfor %}
+              <td align="center">
+                 <a target="_blank" href = {{ getModifyPageUrl(selected_table.tableName,  row[0]) }}>Редактировать</a>
+              </td>
               </tr>
            {% endfor %}
         </table>
@@ -80,7 +83,7 @@
         <br>
         <br>
         {% for page in range(paging.pagesNum) %}
-           <a href = {{ changeArg("page",  page ) }}>{{ page + 1 }}</a>
+           <a  href = {{ changeArg("page",  page ) }}>{{ page + 1 }}</a>
         {% endfor %}
      </form>
   </body>
