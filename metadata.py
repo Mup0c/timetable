@@ -59,6 +59,7 @@ class SUBJECTS:
 
 class SUBJECT_GROUP:
     tableName = 'SUBJECT_GROUP'
+    id = BaseField('id', 'ИД', 'int')
     subject_id = RefField('subject_id', SUBJECTS, SUBJECTS.name)
     group_id = RefField('group_id', GROUPS, GROUPS.name)
 
@@ -75,6 +76,7 @@ class WEEKDAYS:
 
 class SUBJECT_TEACHER:
     tableName = 'SUBJECT_TEACHER'
+    id = BaseField('id', 'ИД', 'int')
     subject_id = RefField('subject_id', SUBJECTS, SUBJECTS.name)
     teacher_id = RefField('teacher_id', TEACHERS, TEACHERS.name)
 

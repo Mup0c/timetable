@@ -9,14 +9,18 @@ from werkzeug.urls import url_encode
 
 app = Flask(__name__)
 
-DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
-#DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
+#DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
+DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
 
 class Paging:
 
-    def __init__(self, cur, table):
-        cur.execute('select count(*) from ' + table.tableName)
-        self.rowsNum = int(cur.fetchall()[0][0])
+    def __init__(self, cur):
+        self.cur = cur
+
+    def nextInit(self, query):
+        print(query)
+        self.cur.execute(query)
+        self.rowsNum = int(self.cur.fetchall()[0][0])
         self.OnPage = makeNat(request.args.get('onpage', 5, type=int))
         if self.OnPage > 10000: self.OnPage = 10000
         self.pagesNum = int(ceil(self.rowsNum / self.OnPage))
@@ -61,19 +65,22 @@ class QueryBuilder:
         self.joinTable(table, meta)
         self.addSearchRequest(table, search)
         self.addSort(table, meta)
-        self.addPage(paging)
+        self.addPage(paging, table)
 
     def createQuery(self, table, meta):
         self.query = 'select %s from ' + table.tableName
+        self.countQuery = 'select count(*) from ' + table.tableName
         return self.query
 
     def joinTable(self, table, meta):
         colsToSelect = []
         for field in meta:
             if isinstance(field, metadata.RefField):
-                self.query += ' left join ' + field.referenceTable.tableName + ' on '  + \
+                temp = ' left join ' + field.referenceTable.tableName + ' on '  + \
                               table.tableName + '.' + field.colName +  ' = ' + \
                               field.referenceTable.tableName + '.' + field.referenceTable.id.colName + '\n'
+                self.query += temp
+                self.countQuery += temp
                 colsToSelect.append(field.referenceTable.tableName + '.' + field.referenceCol.colName)
             else:
                 colsToSelect.append(table.tableName + '.' + field.colName)
@@ -95,7 +102,9 @@ class QueryBuilder:
                 else:
                     request.pop()
         if request != []:
-            self.query += ' where ' + ' and '.join(request)
+            temp = ' where ' + ' and '.join(request)
+            self.countQuery += temp
+            self.query += temp
         return self.query
 
     def addSort(self, table, meta):
@@ -118,12 +127,11 @@ class QueryBuilder:
                 self.query += ', %s.%s'
                 self.query = self.query % (tname, "order_number", tname, cname)
             else:
-                print('AAAAAAAAAAAAA')
-                print(self.query)
                 self.query = self.query % (tname, cname)
         return self.query
 
-    def addPage(self, paging):
+    def addPage(self, paging, table):
+        paging.nextInit(self.countQuery)
         self.query += ' offset %d rows fetch next %d rows only'
         self.query = self.query % (paging.OnPage*paging.page, paging.OnPage)
         return self.query
@@ -163,8 +171,8 @@ def hello():
             selected_table = getattr(metadata,selected_table)
         else:
             selected_table = getattr(metadata, tables[0])
-        paging = Paging(cur, selected_table)
         search = Search(selected_table)
+        paging = Paging(cur)
         print('---------search----------')
         print(search.count)
         print(search.requests)
