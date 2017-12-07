@@ -26,22 +26,22 @@
            {% endfor %}
         </select>
         <br><br>
-        {% for i in range(search.count) %}
-           <select name={{'c' + i|string}}>
+        {% for cond in search.conditions %}
+           <select name={{'c' + cond.order}}>
               {% for field in meta %}
-                 <option {% if search.columns[i].colName==field.colName %} selected {% endif %} value="{{ field.colName }}">
+                 <option {% if cond.column.colName==field.colName %} selected {% endif %} value="{{ field.colName }}">
                     {{ field.viewedName }}
                  </option>
               {% endfor %}
            </select>
-           <select name={{'op' + i|string}}>
+           <select name={{'op' + cond.order}}>
               {% for operator in operators %}
-                 <option {% if search.operators[i]==operator %} selected {% endif %}>
+                 <option {% if cond.operator==operator %} selected {% endif %}>
                     {{ operator }}
                  </option>
               {% endfor %}
             </select>
-           <input name={{'s' + i|string}} value="{{ search.requests[i] }}">
+           <input name={{'s' + cond.order}} value="{{ cond.request }}">
         <br><br>
         {% endfor %}
         <input type="submit" value="Найти">
