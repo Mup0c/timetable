@@ -69,14 +69,14 @@
                  </td>
               {% endfor %}
               <td align="center">
-                 <a target="_blank" href = {{ getModifyPageUrl(selected_table.tableName,  row[0]) }}>Редактировать</a>
+                 <a target="_blank" href = /modify/{{selected_table.tableName}}/{{row[0]}}/>Редактировать</a>
               </td>
               </tr>
            {% endfor %}
         </table>
         <br>
         <a>Строк на страницу: </a>
-        <input type="number" name="onpage" min="1" max="10000" value={{ paging.OnPage }}>
+        <input type="number" name="onpage" min="1" max="10000" value={{ paging.onPage }}>
         <br>
         <br>
         <a>Текущая страница: {{ paging.page + 1 }}</a>

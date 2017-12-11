@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>I have paws</title>
+     <style type="text/css">
+        TABLE {
+            border-collapse: collapse;
+        }
+        TD, TH {
+            padding: 3px;
+            border: 1px solid black;
+        }
+        TH {
+            background: #b0e0e6;
+        }
+     </style>
+  </head>
+  <body>
+     <form>
+        <table>
+           <thead>
+              {% for field in meta %}
+              {% if field.colName != 'id' %}
+                 <th align="center">
+                     {{ field.viewedName }}
+                 </th>
+              {% endif %}
+              {% endfor %}
+           </thead>
+           <tr>
+               {% for element in row %}
+                  <td align="center">
+                      <input name={{field.colName}} value="{{ cond.request }}">
+                     {{ element }}
+                  </td>
+               {% endfor %}
+           </tr>
+        </table>
+        <br>
+     </form>
+  </body>
+</html>
