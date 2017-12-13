@@ -92,20 +92,39 @@ def modifyPage(selected_table, selected_id):
     cur = con.cursor()
     selected_table = getattr(metadata, selected_table)
     meta = getMeta(selected_table)
+    newValues = []
+    anyValues = False
+    for field in meta:
+        if field.colName != 'id':
+            newValues.append(request.args.get(
+                field.colName,
+                None,
+                type=int if (field.type != 'str' and field.type != 'reford') else None)
+                )
+            if newValues[-1] != None: anyValues = True
+    if anyValues:
+        query = QueryBuilder.getUpdate(QueryBuilder(), selected_table, selected_id, meta)
+        print('-----------------------UPDATEQUERY-----------------------')
+        print(query)
+        print(newValues)
+        print('-----------------------UPDATEQUERY-----------------------')
+        cur.execute(query, newValues)
+        cur.transaction.commit()
+    print('----------------newFields-----------------')
+    print(newValues)
     query = QueryBuilder.getRowToModify(QueryBuilder(), selected_table, selected_id, meta)
+    print('-----------------------QUERY-----------------------')
+    print(query)
+    print('-----------------------QUERY-----------------------')
     cur.execute(query)
     rows = cur.fetchall()
+    if rows == []:
+        abort(404)
     return render_template("modify.html",
                            selected_id = selected_id,
                            selected_table = selected_table,
                            row = rows[0],
                            meta = meta
                            )
-
-@app.template_global()
-def modify(table, id, meta):
-    print(table)
-    print(meta)
-    print(id)
 
 app.run(debug=True)

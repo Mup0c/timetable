@@ -56,6 +56,12 @@ class QueryBuilder:
                 colsToSelect.append(table.tableName + '.' + field.colName)
         return ','.join(colsToSelect)
 
+    def addColsToSelectNoFK(self, table, meta):
+        colsToSelect = []
+        for field in meta:
+            colsToSelect.append(table.tableName + '.' + field.colName)
+        return ','.join(colsToSelect)
+
     def joinTable(self, table, meta):
         query = ''
         for field in meta:
@@ -120,4 +126,17 @@ class QueryBuilder:
         return query
 
     def getRowToModify(self, table, id, meta):
-        pass
+        query = self.createQuery(table, meta)
+        query = query % self.addColsToSelectNoFK(table, meta)
+        query += (' where %s.id = ' + str(id)) % table.tableName
+        return query
+
+    def getUpdate(self, table, id, meta):
+        query = 'update %s set\n' % table.tableName
+        exps = []
+        for field in meta:
+            if field.colName != 'id':
+                exps.append('%s = ?' % field.colName)
+        query +=  ','.join(exps)
+        query += '\nwhere ID = ' + str(id)
+        return query

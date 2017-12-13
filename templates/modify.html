@@ -29,14 +29,17 @@
               {% endfor %}
            </thead>
            <tr>
-               {% for element in row %}
+               {% for i in range(row|length) %}
+               {% if i != 0 %}
                   <td align="center">
-                      <input name={{field.colName}} value="{{ cond.request }}">
-                     {{ element }}
+                      <input {% if meta[i].type !='str' and meta[i].type !='reford' %} type="number" min="0" {% endif %} name={{ meta[i].colName }} value="{{ row[i] }}">
                   </td>
+               {% endif %}
                {% endfor %}
            </tr>
         </table>
+        <br>
+        <input type="submit" value="Сохранить изменения">
         <br>
      </form>
   </body>

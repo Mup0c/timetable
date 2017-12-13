@@ -27,7 +27,7 @@ class BaseField:
 
 class RefField(BaseField):
     def __init__(self, colName, referenceTable, referenceCol):
-        super().__init__(colName, viewedName = referenceCol.viewedName, type = None)
+        super().__init__(colName, viewedName = referenceCol.viewedName, type = 'ref')
         self.referenceTable = referenceTable
         self.referenceCol = referenceCol
 
@@ -45,7 +45,7 @@ class LESSONS:
     tableName = 'LESSONS'
     id = BaseField('id','ИД', 'int')
     name = BaseField('name', 'Пара', 'reford')
-    order_number = BaseField('order_number', 'Номер', 'str')
+    order_number = BaseField('order_number', 'Номер', 'int')
 
 class LESSON_TYPES:
     tableName = 'LESSON_TYPES'
