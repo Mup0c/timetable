@@ -62,6 +62,9 @@ def home():
     meta = getMeta(selected_table)
     search = Search(selected_table)
     paging = Paging(cur)
+    idToDelete = request.args.get('delID', -1, type=int)
+    if idToDelete != -1:
+        deleteRow(selected_table.tableName, idToDelete)
     query = QueryBuilder.getTableView(QueryBuilder(),selected_table, meta, search, paging)
     print('-----------------------QUERY-----------------------')
     print(query)
@@ -77,7 +80,18 @@ def home():
         search = search,
         meta = meta,
         paging = paging,
+        idToDelete = -1
         )
+
+def getNewValues(meta):
+    newValues = []
+    for field in meta:
+        newValues.append(request.args.get(
+            field.colName,
+            None,
+            type=int if (field.type != 'str' and field.type != 'reford') else None)
+            )
+    return newValues
 
 @app.route("/modify/<string:selected_table>/<int:selected_id>/")
 def modifyPage(selected_table, selected_id):
@@ -92,24 +106,22 @@ def modifyPage(selected_table, selected_id):
     cur = con.cursor()
     selected_table = getattr(metadata, selected_table)
     meta = getMeta(selected_table)
-    newValues = []
+    meta.pop(0)
+    newValues = getNewValues(meta)
     anyValues = False
-    for field in meta:
-        if field.colName != 'id':
-            newValues.append(request.args.get(
-                field.colName,
-                None,
-                type=int if (field.type != 'str' and field.type != 'reford') else None)
-                )
-            if newValues[-1] != None: anyValues = True
+    for value in newValues:
+        if value != None: anyValues = True
     if anyValues:
         query = QueryBuilder.getUpdate(QueryBuilder(), selected_table, selected_id, meta)
         print('-----------------------UPDATEQUERY-----------------------')
         print(query)
         print(newValues)
         print('-----------------------UPDATEQUERY-----------------------')
-        cur.execute(query, newValues)
-        cur.transaction.commit()
+        try:
+            cur.execute(query, newValues)
+            cur.transaction.commit()
+        except:
+            return 'Ошибка: не существует введенного ID в зависимой таблице'
     print('----------------newFields-----------------')
     print(newValues)
     query = QueryBuilder.getRowToModify(QueryBuilder(), selected_table, selected_id, meta)
@@ -126,5 +138,54 @@ def modifyPage(selected_table, selected_id):
                            row = rows[0],
                            meta = meta
                            )
+
+@app.route("/insert/<string:selected_table>/")
+def insertPage(selected_table):
+    if not selected_table in tables:
+        abort(404)
+    con = fdb.connect(
+        dsn=DB_PATH,
+        user='SYSDBA',
+        password='masterkey',
+        charset='UTF-8'
+    )
+    cur = con.cursor()
+    selected_table = getattr(metadata, selected_table)
+    meta = getMeta(selected_table)
+    meta.pop(0)
+    newValues = getNewValues(meta)
+    anyValues = False
+    for value in newValues:
+        if value != None: anyValues = True
+    if anyValues:
+        query = QueryBuilder.getInsert(QueryBuilder(), selected_table, meta)
+        print('-----------------------INSERTQUERY-----------------------')
+        print(query)
+        print(newValues)
+        print('-----------------------INSERTQUERY-----------------------')
+        try:
+            cur.execute(query, newValues)
+            cur.transaction.commit()
+        except:
+            return 'Ошибка: не существует введенного ID в зависимой таблице'
+    return render_template("insert.html",
+                           selected_table = selected_table,
+                           meta = meta
+                           )
+
+def deleteRow(table, id):
+    if not table in tables:
+        return 0
+    con = fdb.connect(
+        dsn=DB_PATH,
+        user='SYSDBA',
+        password='masterkey',
+        charset='UTF-8'
+    )
+    cur = con.cursor()
+    cur.execute('delete from %s where ID = %s' % (table, str(id)))
+    cur.transaction.commit()
+    return 0
+
 
 app.run(debug=True)

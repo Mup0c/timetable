@@ -21,21 +21,23 @@
         <table>
            <thead>
               {% for field in meta %}
+              {% if field.colName != 'id' %}
                  <th align="center">
                      {{ field.viewedName }}
                  </th>
+              {% endif %}
               {% endfor %}
            </thead>
            <tr>
-               {% for i in range(row|length) %}
+               {% for i in range(meta|length) %}
                   <td align="center">
-                      <input {% if meta[i].type !='str' and meta[i].type !='reford' %} type="number" min="0" {% endif %} name={{ meta[i].colName }} value="{{ row[i] }}">
+                      <input {% if meta[i].type !='str' and meta[i].type !='reford' %} type="number" min="0" {% endif %} name={{ meta[i].colName }} value="">
                   </td>
                {% endfor %}
            </tr>
         </table>
         <br>
-        <input type="submit" value="Сохранить изменения">
+        <input type="submit" value="Добавить запись">
         <br>
      </form>
   </body>

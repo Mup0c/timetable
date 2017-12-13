@@ -140,3 +140,9 @@ class QueryBuilder:
         query +=  ','.join(exps)
         query += '\nwhere ID = ' + str(id)
         return query
+
+    def getInsert(self, table, meta):
+        query = 'insert into %s\n' % table.tableName
+        query += '(%s)\n' % ','.join(field.colName for field in meta)
+        query += 'values (?%s)' % (',?'*(len(meta)-1))
+        return query

@@ -47,6 +47,7 @@
         <input type="submit" value="Найти">
         <input type="hidden" name="cnt" value="{{search.count}}">
         <input type="hidden" name="srt">
+        <input type="hidden" name="delID" value="{{ idToDelete }}">
         <input type="hidden" name="page" value="{{paging.page}}">
         <input type="submit" value="Добавить" onclick="cnt.value={{search.count + 1}}">
         {% if search.count > 1 %}
@@ -60,6 +61,9 @@
                     <a href = {{ changeArg("srt", field.colName) }}>{{ field.viewedName }}</a>
                  </th>
               {% endfor %}
+              <th align="center">
+                 <a target="_blank" href = /insert/{{selected_table.tableName}}/>ДОБАВИТЬ ЗАПИСЬ</a>
+              </th>
            </thead>
            {% for row in rows %}
               <tr>
@@ -70,6 +74,7 @@
               {% endfor %}
               <td align="center">
                  <a target="_blank" href = /modify/{{selected_table.tableName}}/{{row[0]}}/>Редактировать</a>
+                 <input type="submit" value="Удалить" onclick="delID.value={{row[0]}}">
               </td>
               </tr>
            {% endfor %}
