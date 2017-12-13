@@ -46,7 +46,7 @@
         {% endfor %}
         <input type="submit" value="Найти">
         <input type="hidden" name="cnt" value="{{search.count}}">
-        <input type="hidden" name="srt">
+        <input type="hidden" name="srt" value="">
         <input type="hidden" name="delID" value="{{ idToDelete }}">
         <input type="hidden" name="page" value="{{paging.page}}">
         <input type="submit" value="Добавить" onclick="cnt.value={{search.count + 1}}">
@@ -58,7 +58,12 @@
            <thead>
               {% for field in meta %}
                  <th align="center">
-                    <a href = {{ changeArg("srt", field.colName) }}>{{ field.viewedName }}</a>
+                    <a href = {{ changeArg("srt", field.colName) }}>
+                       {{ field.viewedName }}
+                    </a>
+                    <a>
+                       {%if sortCol==field.colName%} ↓{%endif%}
+                    </a>
                  </th>
               {% endfor %}
               <th align="center">

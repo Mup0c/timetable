@@ -8,8 +8,8 @@ from query import *
 
 app = Flask(__name__)
 
-#DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
-DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
+DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
+#DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
 
 
 
@@ -19,10 +19,6 @@ class Paging:
         self.cur = cur
 
     def nextInit(self, query, params):
-        print('----------ROWS QUERY---------------')
-        print(query)
-        print(params)
-        print('----------ROWS QUERY---------------')
         self.cur.execute(query, params)
         self.rowsNum = int(self.cur.fetchall()[0][0])
         self.onPage = min(10000,max(1,request.args.get('onpage', 5, type=int)))
@@ -54,6 +50,7 @@ def home():
     charset='UTF-8'
     )
     cur = con.cursor()
+    sortCol = request.args.get('srt', '')
     selected_table = request.args.get('t', '')
     if selected_table in tables:
         selected_table = getattr(metadata,selected_table)
@@ -65,11 +62,7 @@ def home():
     idToDelete = request.args.get('delID', -1, type=int)
     if idToDelete != -1:
         deleteRow(selected_table.tableName, idToDelete)
-    query = QueryBuilder.getTableView(QueryBuilder(),selected_table, meta, search, paging)
-    print('-----------------------QUERY-----------------------')
-    print(query)
-    print(search.getRequests())
-    print('-----------------------QUERY-----------------------')
+    query = QueryBuilder.getTableView(QueryBuilder(),selected_table, meta, search, paging, sortCol)
     cur.execute(query, search.getRequests())
     rows = cur.fetchall()
     return render_template("index.html",
@@ -80,6 +73,7 @@ def home():
         search = search,
         meta = meta,
         paging = paging,
+        sortCol = sortCol,
         idToDelete = -1
         )
 
@@ -113,21 +107,12 @@ def modifyPage(selected_table, selected_id):
         if value != None: anyValues = True
     if anyValues:
         query = QueryBuilder.getUpdate(QueryBuilder(), selected_table, selected_id, meta)
-        print('-----------------------UPDATEQUERY-----------------------')
-        print(query)
-        print(newValues)
-        print('-----------------------UPDATEQUERY-----------------------')
         try:
             cur.execute(query, newValues)
             cur.transaction.commit()
         except:
             return 'Ошибка: не существует введенного ID в зависимой таблице'
-    print('----------------newFields-----------------')
-    print(newValues)
     query = QueryBuilder.getRowToModify(QueryBuilder(), selected_table, selected_id, meta)
-    print('-----------------------QUERY-----------------------')
-    print(query)
-    print('-----------------------QUERY-----------------------')
     cur.execute(query)
     rows = cur.fetchall()
     if rows == []:
@@ -159,10 +144,6 @@ def insertPage(selected_table):
         if value != None: anyValues = True
     if anyValues:
         query = QueryBuilder.getInsert(QueryBuilder(), selected_table, meta)
-        print('-----------------------INSERTQUERY-----------------------')
-        print(query)
-        print(newValues)
-        print('-----------------------INSERTQUERY-----------------------')
         try:
             cur.execute(query, newValues)
             cur.transaction.commit()
@@ -183,7 +164,7 @@ def deleteRow(table, id):
         charset='UTF-8'
     )
     cur = con.cursor()
-    cur.execute('delete from %s where ID = %s' % (table, str(id)))
+    cur.execute('delete from %s where ID = %d' % (table, id))
     cur.transaction.commit()
     return 0
 

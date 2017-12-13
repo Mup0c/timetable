@@ -33,12 +33,12 @@ class Search:
 
 class QueryBuilder:
 
-    def getTableView(self, table, meta, search, paging):
+    def getTableView(self, table, meta, search, paging, sortCol):
         query = self.createQuery(table, meta)
         query = query % self.addColsToSelect(table, meta)
         query += self.joinTable(table, meta)
         query += self.addSearchRequest(table, search)
-        query += self.addSort(table, meta)
+        query += self.addSort(table, meta, sortCol)
         query += self.addPage(paging, search.getRequests())
         return query
 
@@ -94,9 +94,9 @@ class QueryBuilder:
         return query
 
 
-    def addSort(self, table, meta):
+    def addSort(self, table, meta, sortCol):
         query = ''
-        col = request.args.get('srt','')
+        col = sortCol
         if col in table.__dict__:
             col = getattr(table, col)
         else:

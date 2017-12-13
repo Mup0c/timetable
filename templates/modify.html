@@ -29,7 +29,8 @@
            <tr>
                {% for i in range(row|length) %}
                   <td align="center">
-                      <input {% if meta[i].type !='str' and meta[i].type !='reford' %} type="number" min="0" {% endif %} name={{ meta[i].colName }} value="{{ row[i] }}">
+                      <input {% if meta[i].type !='str' and meta[i].type !='reford' %} type="number" min="0" {% endif %}
+                             name={{ meta[i].colName }} value="{{ row[i] }}">
                   </td>
                {% endfor %}
            </tr>
