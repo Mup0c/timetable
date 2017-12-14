@@ -25,10 +25,7 @@ class Search:
             self.conditions.append(self.Condition(req, col, temp_op, i))
 
     def getRequests(self):
-        list = []
-        for cond in self.conditions:
-            list.append(cond.request)
-        return list
+        return [cond.request for cond in self.conditions]
 
 
 class QueryBuilder:
@@ -48,19 +45,12 @@ class QueryBuilder:
         return query
 
     def addColsToSelect(self, table, meta):
-        colsToSelect = []
-        for field in meta:
-            if isinstance(field, metadata.RefField):
-                colsToSelect.append(field.referenceTable.tableName + '.' + field.referenceCol.colName)
-            else:
-                colsToSelect.append(table.tableName + '.' + field.colName)
-        return ','.join(colsToSelect)
+        return ','.join(field.referenceTable.tableName + '.' + field.referenceCol.colName
+                        if isinstance(field, metadata.RefField) else
+                        table.tableName + '.' + field.colName for field in meta)
 
     def addColsToSelectNoFK(self, table, meta):
-        colsToSelect = []
-        for field in meta:
-            colsToSelect.append(table.tableName + '.' + field.colName)
-        return ','.join(colsToSelect)
+        return ','.join(table.tableName + '.' + field.colName for field in meta)
 
     def joinTable(self, table, meta):
         query = ''
@@ -102,18 +92,12 @@ class QueryBuilder:
         else:
             col = meta[0]
         if col in meta:
-            if isinstance(col, metadata.RefField):
-                tname = col.referenceTable.tableName
-                cname = col.referenceCol.colName
-                ctype = col.referenceCol.type
-            else:
-                tname = table.tableName
-                cname = col.colName
-                ctype = col.type
+            tname = col.referenceTable.tableName if isinstance(col, metadata.RefField) else table.tableName
+            cname = col.referenceCol.colName if isinstance(col, metadata.RefField) else col.colName
+            ctype = col.referenceCol.type if isinstance(col, metadata.RefField) else col.type
             query = ' order by %s.%s'
-            if ctype == "reford":
-                query += ', %s.%s'
-                query = query % (tname, "order_number", tname, cname)
+            if ctype == "ref_ord":
+                query += ', %s.%s' % (tname, "order_number", tname, cname)
             else:
                 query = query % (tname, cname)
         return query
@@ -133,10 +117,7 @@ class QueryBuilder:
 
     def getUpdate(self, table, id, meta):
         query = 'update %s set\n' % table.tableName
-        exps = []
-        for field in meta:
-            if field.colName != 'id':
-                exps.append('%s = ?' % field.colName)
+        exps = ['%s = ?' % field.colName for field in meta]
         query +=  ','.join(exps)
         query += '\nwhere ID = ' + str(id)
         return query

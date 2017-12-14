@@ -78,14 +78,7 @@ def home():
         )
 
 def getNewValues(meta):
-    newValues = []
-    for field in meta:
-        newValues.append(request.args.get(
-            field.colName,
-            None,
-            type=int if (field.type != 'str' and field.type != 'reford') else None)
-            )
-    return newValues
+    return [request.args.get(field.colName, None, type=int if (field.type != 'str' and field.type != 'ref_ord') else None) for field in meta]
 
 @app.route("/modify/<string:selected_table>/<int:selected_id>/")
 def modifyPage(selected_table, selected_id):
@@ -100,7 +93,7 @@ def modifyPage(selected_table, selected_id):
     cur = con.cursor()
     selected_table = getattr(metadata, selected_table)
     meta = getMeta(selected_table)
-    meta.pop(0)
+    meta.pop(0) #Удалить поле ID, т.к. его нельзя изменять пользователю
     newValues = getNewValues(meta)
     anyValues = False
     for value in newValues:
@@ -137,7 +130,7 @@ def insertPage(selected_table):
     cur = con.cursor()
     selected_table = getattr(metadata, selected_table)
     meta = getMeta(selected_table)
-    meta.pop(0)
+    meta.pop(0) #Удалить поле ID, т.к. его нельзя вводить пользователю
     newValues = getNewValues(meta)
     anyValues = False
     for value in newValues:

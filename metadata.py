@@ -44,7 +44,7 @@ class GROUPS:
 class LESSONS:
     tableName = 'LESSONS'
     id = BaseField('id','ИД', 'int')
-    name = BaseField('name', 'Пара', 'reford')
+    name = BaseField('name', 'Пара', 'ref_ord')
     order_number = BaseField('order_number', 'Номер', 'int')
 
 class LESSON_TYPES:
@@ -71,7 +71,7 @@ class TEACHERS:
 class WEEKDAYS:
     tableName = 'WEEKDAYS'
     id = BaseField('id','ИД', 'int')
-    name = BaseField('name', 'День недели', 'reford')
+    name = BaseField('name', 'День недели', 'ref_ord')
     order_number = BaseField('order_number', 'Номер', 'int')
 
 class SUBJECT_TEACHER:
