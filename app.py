@@ -8,8 +8,8 @@ from query import *
 
 app = Flask(__name__)
 
-DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
-#DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
+#DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
+DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
 
 
 
