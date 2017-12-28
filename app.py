@@ -8,10 +8,16 @@ from query import *
 
 app = Flask(__name__)
 
-#DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
-DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
+DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
+#DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
 
-
+def getMeta(table):
+    meta = []
+    for field in table.__dict__:
+        attr = getattr(table, field)
+        if isinstance(attr, metadata.BaseField) or isinstance(attr, metadata.RefField):
+            meta.append(getattr(table, field))
+    return meta
 
 class Paging:
 
@@ -32,14 +38,6 @@ def changeArg(arg, val):
     args = request.args.copy()
     args[arg] = val
     return '{}?{}'.format(request.path, url_encode(args))
-
-def getMeta(table):
-    meta = []
-    for field in table.__dict__:
-        attr = getattr(table, field)
-        if isinstance(attr, metadata.BaseField) or isinstance(attr, metadata.RefField):
-            meta.append(getattr(table, field))
-    return meta
 
 @app.route("/")
 def home():
@@ -146,6 +144,55 @@ def insertPage(selected_table):
                            selected_table = selected_table,
                            meta = meta
                            )
+
+@app.route("/analytics/")
+def analyticsPage():#вынести в перед app.route:
+    con = fdb.connect(
+        dsn=DB_PATH,
+        user='SYSDBA',
+        password='masterkey',
+        charset='UTF-8'
+    )
+    cur = con.cursor()
+    table = getattr(metadata, tables[4])
+    meta = getMeta(table) #table.getmeta
+    viewedNames = [col.viewedName for col in meta]
+    search = Search(table)
+    selected_col = request.args.get('col', '')
+    selected_row = request.args.get('row', '')
+    showNames = request.args.get('showNames', 1, type=int)
+    showed_cols = []
+    for name in viewedNames: #comprehention, параметры сделать английскими
+        if request.args.get(name, 1, type=int): showed_cols.append(viewedNames.index(name))
+    if not (selected_col in viewedNames and selected_row in viewedNames):
+        selected_col = 1   #
+        selected_row = 1 #
+    selected_col = viewedNames.index(selected_col)
+    selected_row = viewedNames.index(selected_row)
+    query = QueryBuilder.getAnalyticsView(QueryBuilder(), table, meta, search)
+    cur.execute(query, search.getRequests())
+    rows = cur.fetchall()
+    rows = [list(row) for row in rows]
+    viewed_table = dict.fromkeys([row[selected_col] for row in rows])
+    #viewed_table = dict.fromkeys(list(row)[selected_col] for row in rows)
+    for col in viewed_table:
+        viewed_table[col] = dict.fromkeys([col[selected_row] for col in rows])
+    for row in rows:
+        if viewed_table[row[selected_col]][row[selected_row]] == None:
+            viewed_table[row[selected_col]][row[selected_row]] = [row]
+        else:
+            viewed_table[row[selected_col]][row[selected_row]].append(row)
+    return render_template("analytics.html",
+        operators=operators,
+        viewed_table = viewed_table,
+        search=search,
+        selected_col = selected_col,
+        selected_row = selected_row,
+        showed_cols = showed_cols,
+        meta = meta,
+        showNames = showNames,
+        viewedNames = viewedNames
+    )
 
 def deleteRow(table, id):
     if not table in tables:

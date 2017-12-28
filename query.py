@@ -30,6 +30,13 @@ class Search:
 
 class QueryBuilder:
 
+    def getAnalyticsView(self, table, meta, search):
+        query = self.createQuery(table, meta)
+        query = query % self.addColsToSelect(table, meta)
+        query += self.joinTable(table, meta)
+        query += self.addSearchRequest(table, search)
+        return query
+
     def getTableView(self, table, meta, search, paging, sortCol):
         query = self.createQuery(table, meta)
         query = query % self.addColsToSelect(table, meta)
@@ -45,9 +52,11 @@ class QueryBuilder:
         return query
 
     def addColsToSelect(self, table, meta):
-        return ','.join(field.referenceTable.tableName + '.' + field.referenceCol.colName
-                        if isinstance(field, metadata.RefField) else
-                        table.tableName + '.' + field.colName for field in meta)
+        return ','.join(
+            field.referenceTable.tableName + '.' + field.referenceCol.colName
+            if isinstance(field, metadata.RefField)
+            else table.tableName + '.' + field.colName
+                for field in meta)
 
     def addColsToSelectNoFK(self, table, meta):
         return ','.join(table.tableName + '.' + field.colName for field in meta)

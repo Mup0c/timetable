@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>I have paws</title>
+     <style type="text/css">
+        TABLE {
+            border-collapse: collapse;
+        }
+        TD, TH {
+            padding: 3px;
+            border: 1px solid black;
+        }
+        TH {
+            background: #b0e0e6;
+        }
+     </style>
+  </head>
+  <body>
+     <form>
+        <a>Строка: </a>
+        <select name="row">
+           {% for name in viewedNames %}
+              <option {% if selected_row==viewedNames.index(name) %} selected {% endif %} >
+                 {{ name }}
+              </option>
+           {% endfor %}
+        </select>
+        <br><br>
+        <a>Столбец: </a>
+        <select name="col">
+           {% for name in viewedNames %}
+              <option {% if selected_col==viewedNames.index(name) %} selected {% endif %} >
+                 {{ name }}
+              </option>
+           {% endfor %}
+        </select>
+        <br><br>
+        <input type="submit" value="Показать">
+        <br><br>
+        <a>Скрыть:</a>
+        <br>
+        {% for name in viewedNames %}
+            <input type="checkbox" name={{name}} value="0" {% if not viewedNames.index(name) in showed_cols %} checked {% endif %}>
+            <a> {{ name}} </a>
+            <br>
+        {% endfor %}
+        <a>Скрыть заголовки: </a>
+        <input type="checkbox" name="showNames" value="0" {% if showNames==0 %} checked {% endif %}>
+        <br><br>
+        {% for cond in search.conditions %}
+           <select name={{'c' + cond.order}}>
+              {% for field in meta %}
+                 <option {% if cond.column.colName==field.colName %} selected {% endif %} value="{{ field.colName }}">
+                    {{ field.viewedName }}
+                 </option>
+              {% endfor %}
+           </select>
+           <select name={{'op' + cond.order}}>
+              {% for operator in operators %}
+                 <option {% if cond.operator==operator %} selected {% endif %}>
+                    {{ operator }}
+                 </option>
+              {% endfor %}
+            </select>
+           <input name={{'s' + cond.order}} value="{{ cond.request }}">
+        <br><br>
+        {% endfor %}
+        <input type="hidden" name="cnt" value="{{search.count}}">
+        <input type="submit" value="Добавить" onclick="cnt.value={{search.count + 1}}">
+        {% if search.count > 1 %}
+        <input type="submit" value="Удалить" onclick="cnt.value={{search.count - 1}}">
+        {% endif %}
+        <br><br>
+        <table>
+           <tr>
+           <th></th>
+           {% if viewed_table|length > 0 %}
+           {% for key in viewed_table.copy().popitem()[1].keys() %}
+              <th align="center">
+                 {{ key }}
+              </th>
+           {% endfor %}
+           {% endif %}
+           </tr>
+           {% for key, dict in viewed_table.items() %}
+              <tr>
+              <th align="center">
+                {{ key }}
+              </th>
+              {% for value in dict.values() %}
+                 <td align="center">
+                    <br>
+                    {% if not value is none %}
+                    {% for list in value %}
+                    <table>
+                       {% for i in showed_cols %}
+                       <tr>
+                          {% if showNames == 1 %}
+                          <td>
+                             {{ viewedNames[i] }}
+                          </td>
+                          {% endif %}
+                          <td>
+                             {{ list[i] }}
+                          </td>
+                       </tr>
+                       {% endfor %}
+                    </table>
+                    <br>
+                    {% endfor %}
+                    {% endif %}
+                 </td>
+              {% endfor %}
+              </tr>
+           {% endfor %}
+        </table>
+     </form>
+  </body>
+</html>

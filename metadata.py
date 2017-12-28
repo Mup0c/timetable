@@ -19,6 +19,7 @@ operators = [
             '<='
             ]
 
+
 class BaseField:
     def __init__(self, colName, viewedName, type):
         self.type = type
