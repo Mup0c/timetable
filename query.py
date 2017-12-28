@@ -101,12 +101,18 @@ class QueryBuilder:
         else:
             col = meta[0]
         if col in meta:
-            tname = col.referenceTable.tableName if isinstance(col, metadata.RefField) else table.tableName
-            cname = col.referenceCol.colName if isinstance(col, metadata.RefField) else col.colName
-            ctype = col.referenceCol.type if isinstance(col, metadata.RefField) else col.type
+            if isinstance(col, metadata.RefField):
+                tname = col.referenceTable.tableName
+                cname = col.referenceCol.colName
+                ctype = col.referenceCol.type
+            else:
+                tname = table.tableName
+                cname = col.colName
+                ctype = col.type
             query = ' order by %s.%s'
             if ctype == "ref_ord":
-                query += ', %s.%s' % (tname, "order_number", tname, cname)
+                query += ', %s.%s'
+                query = query % (tname, "order_number", tname, cname)
             else:
                 query = query % (tname, cname)
         return query

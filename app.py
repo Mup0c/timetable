@@ -76,7 +76,9 @@ def home():
         )
 
 def getNewValues(meta):
-    return [request.args.get(field.colName, None, type=int if (field.type != 'str' and field.type != 'ref_ord') else None) for field in meta]
+    return [request.args.get(field.colName, None,
+        type=(int if (field.type != 'str' and field.type != 'ref_ord') else None))
+            for field in meta]
 
 @app.route("/modify/<string:selected_table>/<int:selected_id>/")
 def modifyPage(selected_table, selected_id):
@@ -109,11 +111,11 @@ def modifyPage(selected_table, selected_id):
     if rows == []:
         abort(404)
     return render_template("modify.html",
-                           selected_id = selected_id,
-                           selected_table = selected_table,
-                           row = rows[0],
-                           meta = meta
-                           )
+        selected_id = selected_id,
+        selected_table = selected_table,
+        row = rows[0],
+        meta = meta
+    )
 
 @app.route("/insert/<string:selected_table>/")
 def insertPage(selected_table):
@@ -146,7 +148,7 @@ def insertPage(selected_table):
                            )
 
 @app.route("/analytics/")
-def analyticsPage():#вынести в перед app.route:
+def analyticsPage():#вынести в перед app.route:   #повесить заполнение галочек на кнопу (если кнопка сабмит нажата хоть раз, то не ставить дефолт галочки
     con = fdb.connect(
         dsn=DB_PATH,
         user='SYSDBA',
@@ -163,12 +165,13 @@ def analyticsPage():#вынести в перед app.route:
     showNames = request.args.get('showNames', 1, type=int)
     showed_cols = []
     for name in viewedNames: #comprehention, параметры сделать английскими
-        if request.args.get(name, 1, type=int): showed_cols.append(viewedNames.index(name))
+        if request.args.get(name, 1, type=int): showed_cols.append(viewedNames.index(name)) #плохо брать индекс, делать нормальный итератор (инт) (или нет)
     if not (selected_col in viewedNames and selected_row in viewedNames):
         selected_col = 1   #
-        selected_row = 1 #
-    selected_col = viewedNames.index(selected_col)
-    selected_row = viewedNames.index(selected_row)
+        selected_row = 1
+    else:
+        selected_col = viewedNames.index(selected_col) ##
+        selected_row = viewedNames.index(selected_row)
     query = QueryBuilder.getAnalyticsView(QueryBuilder(), table, meta, search)
     cur.execute(query, search.getRequests())
     rows = cur.fetchall()
@@ -178,7 +181,7 @@ def analyticsPage():#вынести в перед app.route:
     for col in viewed_table:
         viewed_table[col] = dict.fromkeys([col[selected_row] for col in rows])
     for row in rows:
-        if viewed_table[row[selected_col]][row[selected_row]] == None:
+        if viewed_table[row[selected_col]][row[selected_row]] == None: #viewed table в переменную ??
             viewed_table[row[selected_col]][row[selected_row]] = [row]
         else:
             viewed_table[row[selected_col]][row[selected_row]].append(row)
