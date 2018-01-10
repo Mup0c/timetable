@@ -18,31 +18,32 @@
   </head>
   <body>
      <form>
+        <input type="hidden" name="wasSubmitted" value={{ wasSubmitted }}>
         <a>Строка: </a>
-        <select name="row">
-           {% for name in viewedNames %}
-              <option {% if selected_row==viewedNames.index(name) %} selected {% endif %} >
-                 {{ name }}
+        <select name="row" onchange="wasSubmitted.value=0;this.form.submit()">
+           {% for i in range(viewedNames | length) %}
+              <option {% if selected_row==i %} selected {% endif %} value = {{i}}>
+                 {{ viewedNames[i] }}
               </option>
            {% endfor %}
         </select>
         <br><br>
         <a>Столбец: </a>
-        <select name="col">
-           {% for name in viewedNames %}
-              <option {% if selected_col==viewedNames.index(name) %} selected {% endif %} >
-                 {{ name }}
+        <select name="col" onchange="wasSubmitted.value=0;this.form.submit()">
+           {% for i in range(viewedNames | length) %}
+              <option {% if selected_col==i %} selected {% endif %}  value = {{i}}>
+                 {{ viewedNames[i] }}
               </option>
            {% endfor %}
         </select>
         <br><br>
-        <input type="submit" value="Показать">
+        <input type="submit" value="Показать" onclick="wasSubmitted.value=1">
         <br><br>
         <a>Скрыть:</a>
         <br>
-        {% for name in viewedNames %}
-            <input type="checkbox" name="{{name}}" value="0" {% if not viewedNames.index(name) in showed_cols %} checked {% endif %}>
-            <a> {{ name}} </a>
+        {% for i in range(viewedNames | length) %}
+            <input type="checkbox" name="{{i}}" value="0" {% if not i in showed_cols %} checked {% endif %}>
+            <a> {{ viewedNames[i]}} </a>
             <br>
         {% endfor %}
         <a>Скрыть заголовки: </a>
@@ -67,7 +68,7 @@
         <br><br>
         {% endfor %}
         <input type="hidden" name="cnt" value="{{search.count}}">
-        <input type="submit" value="Добавить" onclick="cnt.value={{search.count + 1}}">
+        <input type="submit" value="Добавить" onclick="cnt.value={{search.count + 1}};wasSubmitted.value=1">
         {% if search.count > 1 %}
         <input type="submit" value="Удалить" onclick="cnt.value={{search.count - 1}}">
         {% endif %}
