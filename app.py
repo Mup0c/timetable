@@ -137,7 +137,7 @@ def insertPage(selected_table):
 
 @app.route("/analytics/")
 def analyticsPage():
-    table = getattr(metadata, tables[4])
+    table = getattr(metadata, tables[4]) #SCHED_ITEMS
     meta = getMeta(table)
     viewedNames = [col.viewedName for col in meta]
     search = Search(table)
@@ -146,7 +146,7 @@ def analyticsPage():
     showNames = request.args.get('showNames', 1, type=int)
     wasSubmitted = request.args.get('wasSubmitted', 0, type=int)
     showed_cols = [i for i in range(len(viewedNames)) if ((request.args.get(str(i), 1, type=int)) if wasSubmitted else
-        (i != selected_row and i != selected_col))]
+        (i != selected_row and i != selected_col and i != 0))] #не показывать проекции и ID по умолчанию
     if not (selected_col in range(len(viewedNames)) and selected_row in range(len(viewedNames))):
         selected_col = 1 #Пара
         selected_row = 7 #День недели

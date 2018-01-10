@@ -6,14 +6,25 @@
      <style type="text/css">
         TABLE {
             border-collapse: collapse;
+            border: 2px solid #b0e0e6;
+            border-right: 0px;
+            border-left: 0px;
         }
         TD, TH {
-            padding: 3px;
-            border: 1px solid black;
+            padding: 4px;
+            border: 3px solid black;
         }
         TH {
             background: #b0e0e6;
         }
+        .names{
+            border: 0px;
+        }
+        .data{
+            width: 400px;
+            border: 0px;
+        }
+
      </style>
   </head>
   <body>
@@ -90,7 +101,7 @@
                 {{ key }}
               </th>
               {% for value in dict.values() %}
-                 <td align="center">
+                 <td>
                     <br>
                     {% if not value is none %}
                     {% for list in value %}
@@ -98,11 +109,11 @@
                        {% for i in showed_cols %}
                        <tr>
                           {% if showNames == 1 %}
-                          <td>
+                          <td class="names">
                              {{ viewedNames[i] }}
                           </td>
                           {% endif %}
-                          <td>
+                          <td class="data" {% if showNames == 0 %} align="center" {%endif%}>
                              {{ list[i] }}
                           </td>
                        </tr>
