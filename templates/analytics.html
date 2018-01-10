@@ -41,7 +41,7 @@
         <a>Скрыть:</a>
         <br>
         {% for name in viewedNames %}
-            <input type="checkbox" name={{name}} value="0" {% if not viewedNames.index(name) in showed_cols %} checked {% endif %}>
+            <input type="checkbox" name="{{name}}" value="0" {% if not viewedNames.index(name) in showed_cols %} checked {% endif %}>
             <a> {{ name}} </a>
             <br>
         {% endfor %}

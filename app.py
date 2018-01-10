@@ -8,8 +8,17 @@ from query import *
 
 app = Flask(__name__)
 
-DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
-#DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
+#DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
+DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
+
+con = fdb.connect(
+    dsn=DB_PATH,
+    user='SYSDBA',
+    password='masterkey',
+    charset='UTF-8'
+)
+cur = con.cursor()
+
 
 def getMeta(table):
     meta = []
@@ -41,13 +50,6 @@ def changeArg(arg, val):
 
 @app.route("/")
 def home():
-    con = fdb.connect(
-    dsn=DB_PATH,
-    user='SYSDBA',
-    password='masterkey',
-    charset='UTF-8'
-    )
-    cur = con.cursor()
     sortCol = request.args.get('srt', '')
     selected_table = request.args.get('t', '')
     if selected_table in tables:
@@ -84,13 +86,6 @@ def getNewValues(meta):
 def modifyPage(selected_table, selected_id):
     if not selected_table in tables:
         abort(404)
-    con = fdb.connect(
-        dsn=DB_PATH,
-        user='SYSDBA',
-        password='masterkey',
-        charset='UTF-8'
-    )
-    cur = con.cursor()
     selected_table = getattr(metadata, selected_table)
     meta = getMeta(selected_table)
     meta.pop(0) #Удалить поле ID, т.к. его нельзя изменять пользователю
@@ -121,13 +116,6 @@ def modifyPage(selected_table, selected_id):
 def insertPage(selected_table):
     if not selected_table in tables:
         abort(404)
-    con = fdb.connect(
-        dsn=DB_PATH,
-        user='SYSDBA',
-        password='masterkey',
-        charset='UTF-8'
-    )
-    cur = con.cursor()
     selected_table = getattr(metadata, selected_table)
     meta = getMeta(selected_table)
     meta.pop(0) #Удалить поле ID, т.к. его нельзя вводить пользователю
@@ -148,14 +136,7 @@ def insertPage(selected_table):
                            )
 
 @app.route("/analytics/")
-def analyticsPage():#вынести в перед app.route:   #повесить заполнение галочек на кнопу (если кнопка сабмит нажата хоть раз, то не ставить дефолт галочки
-    con = fdb.connect(
-        dsn=DB_PATH,
-        user='SYSDBA',
-        password='masterkey',
-        charset='UTF-8'
-    )
-    cur = con.cursor()
+def analyticsPage(): #повесить заполнение галочек на кнопу (если кнопка сабмит нажата хоть раз, то не ставить дефолт галочки
     table = getattr(metadata, tables[4])
     meta = getMeta(table) #table.getmeta
     viewedNames = [col.viewedName for col in meta]
@@ -177,7 +158,6 @@ def analyticsPage():#вынести в перед app.route:   #повесить
     rows = cur.fetchall()
     rows = [list(row) for row in rows]
     viewed_table = dict.fromkeys([row[selected_col] for row in rows])
-    #viewed_table = dict.fromkeys(list(row)[selected_col] for row in rows)
     for col in viewed_table:
         viewed_table[col] = dict.fromkeys([col[selected_row] for col in rows])
     for row in rows:
@@ -200,13 +180,6 @@ def analyticsPage():#вынести в перед app.route:   #повесить
 def deleteRow(table, id):
     if not table in tables:
         return 0
-    con = fdb.connect(
-        dsn=DB_PATH,
-        user='SYSDBA',
-        password='masterkey',
-        charset='UTF-8'
-    )
-    cur = con.cursor()
     cur.execute('delete from %s where ID = %d' % (table, id))
     cur.transaction.commit()
     return 0
