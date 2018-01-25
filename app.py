@@ -137,7 +137,7 @@ def insertPage(selected_table):
 
 @app.route("/analytics/")
 def analyticsPage():
-    table = getattr(metadata, tables[4]) #SCHED_ITEMS
+    table = metadata.SCHED_ITEMS
     meta = getMeta(table)
     viewedNames = [col.viewedName for col in meta]
     search = Search(table)

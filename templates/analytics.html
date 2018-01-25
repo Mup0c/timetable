@@ -1,8 +1,9 @@
 <!DOCTYPE HTML>
 <html>
   <head>
-    <meta charset="UTF-8">
-    <title>I have paws</title>
+     <script src="../static/js/jquery-3.2.1.min.js"></script>
+     <meta charset="UTF-8">
+     <title>I have paws</title>
      <style type="text/css">
         TABLE {
             border-collapse: collapse;
@@ -24,8 +25,19 @@
             width: 400px;
             border: 0px;
         }
-
+        .cardHidden{
+            display: ;
+        }
+        .cardShown{
+        }
      </style>
+     <script>
+        $(document).ready(function(){
+            $(".btn-hide").click(function(){
+               $(this).parent().child().hide();
+            });
+        });
+    </script>
   </head>
   <body>
      <form>
@@ -101,11 +113,12 @@
                 {{ key }}
               </th>
               {% for value in dict.values() %}
-                 <td>
+                 <td valign="top">
                     <br>
+                    <button class="btn-hide"> HIDE </button>
                     {% if not value is none %}
                     {% for list in value %}
-                    <table>
+                    <table {% if not list == value[0] %} class="cardHidden" {% endif %}>
                        {% for i in showed_cols %}
                        <tr>
                           {% if showNames == 1 %}
