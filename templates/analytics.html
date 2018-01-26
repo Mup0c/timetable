@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
   <head>
-     <script src="../static/js/jquery-3.2.1.min.js"></script>
+     <script src="../static/js/jquery-3.3.1.min.js"></script>
      <meta charset="UTF-8">
      <title>I have paws</title>
      <style type="text/css">
@@ -25,19 +25,74 @@
             width: 400px;
             border: 0px;
         }
-        .cardHidden{
-            display: ;
+        .actions{
+            border: 1px solid grey;
+            border-right: 0px;
+            border-left: 0px;
         }
-        .cardShown{
+        .hidden{
+            display: none;
+        }
+        .card{
+        }
+        .a {
+            border: 1px solid #b0b0b0;
+            display: inline-block;
+            padding: 1px 5px;
+            text-decoration: none;
+            background: linear-gradient(to bottom, #fcffff, #b0e0e6);
+            color: #000;
+            margin: 5px;
+            width: 150px;
+
+        }
+        .c {
+            border: 1px solid #b0b0b0;
+            display: inline-block;
+            padding: 1px 5px;
+            text-decoration: none;
+            background: linear-gradient(to bottom, #fcffff, #e9e9e9);
+            color: #000;
+        }
+        .b {
+            margin: 2px;
+        }
+        .btn-show {
+            border: 2px solid black;
+            padding: 1px 45px;
+            background: linear-gradient(to bottom, #fcffff, #e9e9e9);
         }
      </style>
      <script>
         $(document).ready(function(){
-            $(".btn-hide").click(function(){
-               $(this).parent().child().hide();
+            $(".btn-show").click(function(){
+               $(this).parent().children('.card').toggleClass("hidden");
+               if($(this).val() == 'Развернуть'){
+                  $(this).val('Свернуть')
+               }
+               else {
+                  $(this).val('Развернуть')
+               }
             });
         });
-    </script>
+     </script>
+     <script>
+         function allowDrop(ev) {
+             ev.preventDefault();
+         }
+
+
+         function drag(ev) {
+             ev.dataTransfer.setData("id", ev.target.id);
+         }
+         function drop(ev) {
+             ev.preventDefault();
+             var data = ev.dataTransfer.getData("id");
+             href = "/modify/SCHED_ITEMS/"+data+"/?{{meta[selected_col].colName}}="+ev.target.getAttribute('cval')+""+
+               "&{{meta[selected_row].colName}}="+ev.target.getAttribute('rval')+"";
+             $.ajax(href, complete = setTimeout("location.reload();", 50));
+         }
+     </script>
   </head>
   <body>
      <form>
@@ -91,6 +146,7 @@
         <br><br>
         {% endfor %}
         <input type="hidden" name="cnt" value="{{search.count}}">
+        <input type="hidden" name="delID" value="{{ idToDelete }}">
         <input type="submit" value="Добавить" onclick="cnt.value={{search.count + 1}};wasSubmitted.value=1">
         {% if search.count > 1 %}
         <input type="submit" value="Удалить" onclick="cnt.value={{search.count - 1}}">
@@ -100,40 +156,60 @@
            <tr>
            <th></th>
            {% if viewed_table|length > 0 %}
-           {% for key in viewed_table.copy().popitem()[1].keys() %}
+           {% for key1 in viewed_table.copy().popitem()[1].keys() %}
               <th align="center">
-                 {{ key }}
+                 {{ key1[0] }}
               </th>
            {% endfor %}
            {% endif %}
            </tr>
-           {% for key, dict in viewed_table.items() %}
+           {% for key1, dict in viewed_table.items() %}
               <tr>
               <th align="center">
-                {{ key }}
+                {{ key1[0] }}
               </th>
-              {% for value in dict.values() %}
-                 <td valign="top">
+              {% for key2, value in dict.items() %}
+                 <td valign="top" align="center" ondrop="drop(event)" ondragover="allowDrop(event)" cval={{key1[1]}} rval={{key2[1]}}>
+                    <a target="_blank"
+                       href = /insert/SCHED_ITEMS/?c={{selected_col}}&r={{selected_row}}&cval={{key1[1]}}&rval={{key2[1]}}
+                       class="a">Добавить карточку</a>
                     <br>
-                    <button class="btn-hide"> HIDE </button>
                     {% if not value is none %}
                     {% for list in value %}
-                    <table {% if not list == value[0] %} class="cardHidden" {% endif %}>
+                    <div {% if not list == value[0] %} class="card hidden" {% endif %}
+                         draggable="true" ondragstart="drag(event)" id={{list[0][0]}}>
+                    <table>
                        {% for i in showed_cols %}
                        <tr>
                           {% if showNames == 1 %}
-                          <td class="names">
+                          <td class="names" cval={{key1[1]}} rval={{key2[1]}}>
                              {{ viewedNames[i] }}
                           </td>
                           {% endif %}
-                          <td class="data" {% if showNames == 0 %} align="center" {%endif%}>
-                             {{ list[i] }}
+                          <td class="data" {% if showNames == 0 %} align="center" {%endif%} cval={{key1[1]}} rval={{key2[1]}}>
+                             {{ list[i][0] }}
                           </td>
                        </tr>
                        {% endfor %}
+                       <tr>
+                       {% if showNames == 1 %}
+                          <td class="actions" cval={{key1[1]}} rval={{key2[1]}}>
+                             Действия
+                          </td>
+                       {% endif %}
+                          <td class="actions" align="center" cval={{key1[1]}} rval={{key2[1]}}>
+                            <a target="_blank" href = /modify/SCHED_ITEMS/{{list[0][0]}}/?c={{selected_col}}&r={{selected_row}}
+                               class="c">Редактировать</a>
+                            <input type="submit" value="Удалить" onclick="delID.value={{list[0][0]}}" class="b">
+                          </td>
+                       </tr>
                     </table>
                     <br>
+                    </div>
                     {% endfor %}
+                    {% if value|length > 1%}
+                    <input type="button" class=btn-show value="Развернуть">
+                    {% endif %}
                     {% endif %}
                  </td>
               {% endfor %}

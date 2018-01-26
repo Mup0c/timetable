@@ -87,12 +87,22 @@ def modifyPage(selected_table, selected_id):
     if not selected_table in tables:
         abort(404)
     selected_table = getattr(metadata, selected_table)
+    row = request.args.get('r', -1, type=int)
+    col = request.args.get('c', -1, type=int)
     meta = getMeta(selected_table)
     meta.pop(0) #Удалить поле ID, т.к. его нельзя изменять пользователю
+    query = QueryBuilder.getRowToModify(QueryBuilder(), selected_table, selected_id, meta)
+    cur.execute(query)
+    rows = cur.fetchall()
+    if rows == []:
+        abort(404)
     newValues = getNewValues(meta)
     anyValues = False
-    for value in newValues:
-        if value != None: anyValues = True
+    for i in range(len(newValues)):
+        if newValues[i] != None:
+            anyValues = True
+        else:
+            newValues[i] = rows[0][i]
     if anyValues:
         query = QueryBuilder.getUpdate(QueryBuilder(), selected_table, selected_id, meta)
         try:
@@ -100,15 +110,12 @@ def modifyPage(selected_table, selected_id):
             cur.transaction.commit()
         except:
             return 'Ошибка: не существует введенного ID в зависимой таблице'
-    query = QueryBuilder.getRowToModify(QueryBuilder(), selected_table, selected_id, meta)
-    cur.execute(query)
-    rows = cur.fetchall()
-    if rows == []:
-        abort(404)
     return render_template("modify.html",
         selected_id = selected_id,
         selected_table = selected_table,
-        row = rows[0],
+        row = newValues,
+        olap_row=row,
+        olap_col=col,
         meta = meta
     )
 
@@ -118,6 +125,10 @@ def insertPage(selected_table):
         abort(404)
     selected_table = getattr(metadata, selected_table)
     meta = getMeta(selected_table)
+    row = request.args.get('r', -1, type=int)
+    col = request.args.get('c', -1, type=int)
+    row_val = request.args.get('rval', -1, type=int)
+    col_val = request.args.get('cval', -1, type=int)
     meta.pop(0) #Удалить поле ID, т.к. его нельзя вводить пользователю
     newValues = getNewValues(meta)
     anyValues = False
@@ -132,7 +143,11 @@ def insertPage(selected_table):
             return 'Ошибка: не существует введенного ID в зависимой таблице'
     return render_template("insert.html",
                            selected_table = selected_table,
-                           meta = meta
+                           meta = meta,
+                           olap_row = row,
+                           olap_col = col,
+                           row_val = row_val,
+                           col_val = col_val
                            )
 
 @app.route("/analytics/")
@@ -141,6 +156,9 @@ def analyticsPage():
     meta = getMeta(table)
     viewedNames = [col.viewedName for col in meta]
     search = Search(table)
+    idToDelete = request.args.get('delID', -1, type=int)
+    if idToDelete != -1:
+        deleteRow(table.tableName, idToDelete)
     selected_col = request.args.get('col', 1, type=int) #default - Пара
     selected_row = request.args.get('row', 7, type=int) #default - День недели
     showNames = request.args.get('showNames', 1, type=int)
@@ -150,13 +168,32 @@ def analyticsPage():
     if not (selected_col in range(len(viewedNames)) and selected_row in range(len(viewedNames))):
         selected_col = 1 #Пара
         selected_row = 7 #День недели
+
+    cur.execute(QueryBuilder.getTableRows(QueryBuilder(),meta[selected_row].referenceTable if not selected_row == 0 else table))
+    rows = cur.fetchall()
+    if not selected_row == 0: rows.append((None,None))
+    cur.execute(QueryBuilder.getTableRows(QueryBuilder(),meta[selected_col].referenceTable if not selected_col == 0 else table))
+    cols = cur.fetchall()
+    if not selected_col == 0: cols.append((None,None))
+    viewed_table = dict.fromkeys([(col[1],col[0]) if not selected_col == 0 else (col[0],col[0]) for col in cols])
+    for col in viewed_table:
+        viewed_table[col] = dict.fromkeys([(row[1],row[0]) if not selected_row == 0 else (row[0],row[0]) for row in rows])
+
     query = QueryBuilder.getAnalyticsView(QueryBuilder(), table, meta, search)
     cur.execute(query, search.getRequests())
     rows = cur.fetchall()
-    rows = [list(row) for row in rows]
-    viewed_table = dict.fromkeys([row[selected_col] for row in rows])
-    for col in viewed_table:
-        viewed_table[col] = dict.fromkeys([col[selected_row] for col in rows])
+    rows_name = []
+    rows_id = []
+    for row in rows:
+        rows_name.append([])
+        rows_id.append([row[0]])
+        for i in range(len(row)):
+            rows_name[-1].append(row[i]) if i == 0 or i % 2 else rows_id[-1].append(row[i])
+    for i in range(len(rows_name)):
+        for j in range(len(rows_name[i])):
+            rows_name[i][j] = (rows_name[i][j], rows_id[i][j])
+
+    rows = rows_name
     for row in rows:
         if viewed_table[row[selected_col]][row[selected_row]] == None:
             viewed_table[row[selected_col]][row[selected_row]] = [row]
@@ -172,7 +209,8 @@ def analyticsPage():
         meta = meta,
         showNames = showNames,
         viewedNames = viewedNames,
-        wasSubmitted = wasSubmitted
+        wasSubmitted = wasSubmitted,
+        idToDelete=-1
     )
 
 def deleteRow(table, id):

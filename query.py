@@ -30,9 +30,12 @@ class Search:
 
 class QueryBuilder:
 
+    def getTableRows(self, table):
+        return 'select * from ' + table.tableName
+
     def getAnalyticsView(self, table, meta, search):
         query = self.createQuery(table, meta)
-        query = query % self.addColsToSelect(table, meta)
+        query = query % self.addColsToSelect_analytics(table, meta)
         query += self.joinTable(table, meta)
         query += self.addSearchRequest(table, search)
         return query
@@ -50,6 +53,12 @@ class QueryBuilder:
         query = 'select %s from ' + table.tableName
         self.countQuery = 'select count(*) from ' + table.tableName
         return query
+
+    def addColsToSelect_analytics(self, table, meta):
+        return ','.join((field.referenceTable.tableName + '.' + field.referenceCol.colName + ',' + table.tableName + '.' + field.colName)
+                        if isinstance(field, metadata.RefField) else
+                        (table.tableName + '.' + field.colName)
+                        for field in meta)
 
     def addColsToSelect(self, table, meta):
         return ','.join(
