@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <script src="../static/js/jquery-3.3.1.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Конфликты</title>
+    <style type="text/css">
+        TABLE {
+            border-collapse: collapse;
+            border: 3px solid black;
+            border-right: 0px;
+            border-left: 0px;
+            width: 100%;
+        }
+        TD, TH {
+            padding: 4px;
+            border: 2px solid #b0e0e6;
+        }
+        TH {
+            background: #b0e0e6;
+        }
+        .std_button {
+            border: 1px solid #b0b0b0;
+            display: inline-block;
+            padding: 1px 5px;
+            text-decoration: none;
+            background: linear-gradient(to bottom, #fcffff, #e9e9e9);
+            color: #000;
+            margin: 2px;
+            font: 100% sans-serif
+        }
+    </style>
+</head>
+<body>
+<form>
+    <input type="hidden" name="delID" value="{{ idToDelete }}">
+    <h3>
+        <a href="/analytics/" class="std_button">Аналитика</a>
+        <a href="/conflicts/" class="std_button">Конфликты</a>
+        <a href="/" class="std_button">Таблицы</a>
+        <br>
+    </h3>
+    <h2>
+        {% for conf in conflicts %}<a href="/conflicts/{{conf.type_id}}" class="std_button">{{conf.name}}</a>{% endfor %}
+    </h2>
+    {% for rows in rows_list %}
+        <table>
+            {% for field in meta %}
+            <th align="center">
+                {{ field.viewedName }}
+            </th>
+            {% endfor %}
+            <th align="center">Действия</th>
+            {% for row in rows %}
+            <tr>
+                {% for element in row %}
+                <td align="center">
+                    {{ element }}
+                </td>
+                {% endfor %}
+                <td align="center" width="200px">
+                    <a target="_blank" class="std_button" href = /modify/SCHED_ITEMS/{{row[0]}}/>Редактировать</a>
+                    <input type="submit" value="Удалить" onclick="delID.value={{row[0]}}">
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <br>
+    {% endfor %}
+</form>
+</body>
+</html>

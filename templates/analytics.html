@@ -3,7 +3,7 @@
   <head>
      <script src="../static/js/jquery-3.3.1.min.js"></script>
      <meta charset="UTF-8">
-     <title>I have paws</title>
+     <title>Аналитика</title>
      <style type="text/css">
         TABLE {
             border-collapse: collapse;
@@ -17,6 +17,7 @@
         }
         TH {
             background: #b0e0e6;
+            font: 12pt sans-serif
         }
         .names{
             border: 0px;
@@ -35,6 +36,10 @@
         }
         .card{
         }
+        .conf{
+            border: 3px solid red;
+            margin: 5px
+        }
         .a {
             border: 1px solid #b0b0b0;
             display: inline-block;
@@ -44,7 +49,7 @@
             color: #000;
             margin: 5px;
             width: 150px;
-
+            font: 12pt sans-serif
         }
         .c {
             border: 1px solid #b0b0b0;
@@ -53,6 +58,7 @@
             text-decoration: none;
             background: linear-gradient(to bottom, #fcffff, #e9e9e9);
             color: #000;
+            font: 100% sans-serif
         }
         .b {
             margin: 2px;
@@ -90,11 +96,20 @@
              var data = ev.dataTransfer.getData("id");
              href = "/modify/SCHED_ITEMS/"+data+"/?{{meta[selected_col].colName}}="+ev.target.getAttribute('cval')+""+
                "&{{meta[selected_row].colName}}="+ev.target.getAttribute('rval')+"";
-             $.ajax(href, complete = setTimeout("location.reload();", 50));
+             $.ajax({
+                url: href,
+                success: setTimeout("location.reload(true);", 200)
+             });
          }
      </script>
   </head>
   <body>
+    <h3>
+        <a href="/analytics/" class="c">Аналитика</a>
+        <a href="/conflicts/" class="c">Конфликты</a>
+        <a href="/" class="c">Таблицы</a>
+        <br>
+    </h3>
      <form>
         <input type="hidden" name="wasSubmitted" value={{ wasSubmitted }}>
         <a>Строка: </a>
@@ -172,11 +187,14 @@
                  <td valign="top" align="center" ondrop="drop(event)" ondragover="allowDrop(event)" cval={{key1[1]}} rval={{key2[1]}}>
                     <a target="_blank"
                        href = /insert/SCHED_ITEMS/?c={{selected_col}}&r={{selected_row}}&cval={{key1[1]}}&rval={{key2[1]}}
-                       class="a">Добавить карточку</a>
+                       class="a" ondragstart="allowDrop(event)">
+                       Добавить карточку
+                    </a>
                     <br>
                     {% if not value is none %}
                     {% for list in value %}
-                    <div {% if not list == value[0] %} class="card hidden" {% endif %}
+                    <div {% if not list == value[0] %} class="card hidden {% if list[0][0] in conflictingIDs %}conf{% endif %}"
+                         {% else %}{% if list[0][0] in conflictingIDs %}class="conf"{% endif %} {% endif %}
                          draggable="true" ondragstart="drag(event)" id={{list[0][0]}}>
                     <table>
                        {% for i in showed_cols %}
@@ -199,7 +217,7 @@
                        {% endif %}
                           <td class="actions" align="center" cval={{key1[1]}} rval={{key2[1]}}>
                             <a target="_blank" href = /modify/SCHED_ITEMS/{{list[0][0]}}/?c={{selected_col}}&r={{selected_row}}
-                               class="c">Редактировать</a>
+                               class="c" ondragstart="allowDrop(event)" >Редактировать</a>
                             <input type="submit" value="Удалить" onclick="delID.value={{list[0][0]}}" class="b">
                           </td>
                        </tr>

@@ -1,24 +1,11 @@
-import fdb
 from math import ceil
 from flask import Flask
 from flask import render_template
 from flask import abort
 from werkzeug.urls import url_encode
-from query import *
+from conflicts import *
 
 app = Flask(__name__)
-
-#DB_PATH = 'localhost:C:/Users/mir-o/cloud/db/TIMETABLE.FDB'
-DB_PATH = 'localhost:E:/CloudMail.Ru/db/TIMETABLE.FDB'
-
-con = fdb.connect(
-    dsn=DB_PATH,
-    user='SYSDBA',
-    password='masterkey',
-    charset='UTF-8'
-)
-cur = con.cursor()
-
 
 def getMeta(table):
     meta = []
@@ -108,6 +95,7 @@ def modifyPage(selected_table, selected_id):
         try:
             cur.execute(query, newValues)
             cur.transaction.commit()
+            updateConflicts()
         except:
             return 'Ошибка: не существует введенного ID в зависимой таблице'
     return render_template("modify.html",
@@ -127,8 +115,8 @@ def insertPage(selected_table):
     meta = getMeta(selected_table)
     row = request.args.get('r', -1, type=int)
     col = request.args.get('c', -1, type=int)
-    row_val = request.args.get('rval', -1, type=int)
-    col_val = request.args.get('cval', -1, type=int)
+    row_val = request.args.get('rval', None, type=int)
+    col_val = request.args.get('cval', None, type=int)
     meta.pop(0) #Удалить поле ID, т.к. его нельзя вводить пользователю
     newValues = getNewValues(meta)
     anyValues = False
@@ -139,6 +127,7 @@ def insertPage(selected_table):
         try:
             cur.execute(query, newValues)
             cur.transaction.commit()
+            updateConflicts()
         except:
             return 'Ошибка: не существует введенного ID в зависимой таблице'
     return render_template("insert.html",
@@ -199,26 +188,63 @@ def analyticsPage():
             viewed_table[row[selected_col]][row[selected_row]] = [row]
         else:
             viewed_table[row[selected_col]][row[selected_row]].append(row)
+    query = QueryBuilder.getConflictingIDs(QueryBuilder())
+    cur.execute(query)
+    conflictingIDs = cur.fetchall()
+    conflictingIDs = [item[0] for item in conflictingIDs]
     return render_template("analytics.html",
-        operators=operators,
-        viewed_table = viewed_table,
-        search=search,
-        selected_col = selected_col,
-        selected_row = selected_row,
-        showed_cols = showed_cols,
-        meta = meta,
-        showNames = showNames,
-        viewedNames = viewedNames,
-        wasSubmitted = wasSubmitted,
-        idToDelete=-1
-    )
+                           operators=operators,
+                           viewed_table = viewed_table,
+                           search=search,
+                           selected_col = selected_col,
+                           selected_row = selected_row,
+                           showed_cols = showed_cols,
+                           meta = meta,
+                           showNames = showNames,
+                           viewedNames = viewedNames,
+                           wasSubmitted = wasSubmitted,
+                           conflictingIDs=conflictingIDs,
+                           idToDelete=-1
+                           )
 
 def deleteRow(table, id):
     if not table in tables:
         return 0
     cur.execute('delete from %s where ID = %d' % (table, id))
     cur.transaction.commit()
+    updateConflicts()
     return 0
+
+@app.route("/conflicts/")
+@app.route("/conflicts/<int:type_id>")
+def conflict(type_id = 0):
+    if not type_id in range(3):
+        abort(404)
+    table = metadata.SCHED_ITEMS
+    meta = getMeta(table)
+    viewedNames = [col.viewedName for col in meta]
+    idToDelete = request.args.get('delID', -1, type=int)
+    if idToDelete != -1:
+        deleteRow(table.tableName, idToDelete)
+    query = QueryBuilder.getConflict(QueryBuilder(), table, meta, type_id)
+    cur.execute(query)
+    rows = cur.fetchall()
+    conflicts_by_groups = [[]]
+    last_group_id = -1
+    for conflict in rows:
+        if conflict == rows[0]:
+            last_group_id = conflict[0]
+        if conflict[0] != last_group_id:
+            conflicts_by_groups.append([])
+        conflicts_by_groups[-1].append(conflict[1:])
+        last_group_id = conflict[0]
+    return render_template("conflicts_page.html",
+                           rows_list=conflicts_by_groups,
+                           meta=meta,
+                           viewedNames=viewedNames,
+                           idToDelete=-1,
+                           conflicts=conflicts_meta
+                           )
 
 
 app.run(debug=True)

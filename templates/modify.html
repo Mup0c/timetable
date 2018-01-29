@@ -13,6 +13,7 @@
         }
         TH {
             background: #b0e0e6;
+            font: 100% sans-serif
         }
         .olap{
              background: #b0e0e6;
@@ -34,7 +35,7 @@
            <tr>
                {% for i in range(row|length) %}
                   <td align="center">
-                      <input {% if meta[i].type !='str' and meta[i].type !='ref_ord' %} type="number" min="0" {% endif %}
+                      <input {% if meta[i].type !='str' and meta[i].type !='ref_ord' %} type="number" min="0" max="9999999"{% endif %}
                              name={{ meta[i].colName }} value="{{ row[i] }}"
                              {% if i == olap_col-1 or i == olap_row-1 %}class="olap"{% endif %}>
                   </td>

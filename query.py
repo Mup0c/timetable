@@ -29,6 +29,7 @@ class Search:
 
 
 class QueryBuilder:
+    countQuery = 'select count(*) from '
 
     def getTableRows(self, table):
         return 'select * from ' + table.tableName
@@ -51,7 +52,7 @@ class QueryBuilder:
 
     def createQuery(self, table, meta):
         query = 'select %s from ' + table.tableName
-        self.countQuery = 'select count(*) from ' + table.tableName
+        self.countQuery += table.tableName
         return query
 
     def addColsToSelect_analytics(self, table, meta):
@@ -146,8 +147,28 @@ class QueryBuilder:
         query += '\nwhere ID = ' + str(id)
         return query
 
-    def getInsert(self, table, meta):
-        query = 'insert into %s\n' % table.tableName
-        query += '(%s)\n' % ','.join(field.colName for field in meta)
+    def getInsert(self, table, meta, conflict = False):
+        query = 'insert into %s ' % table if conflict else table.tableName
+        query += '(%s) ' % ','.join(field if conflict else field.colName for field in meta)
         query += 'values (?%s)' % (',?'*(len(meta)-1))
+        return query
+
+    def getConflict(self, table, meta, type_id):
+        query = 'select c.CONFLICT_GROUP_ID,%s from CONFLICTS c ' % self.addColsToSelect(table,meta)
+        query += 'inner join SCHED_ITEMS on c.SCHED_ITEM_ID = SCHED_ITEMS.ID '
+        query += self.joinTable(table, meta)
+        query += ' where c.CONFLICT_TYPE_ID = %d' % type_id
+        return query
+
+    def getConflictingIDs(self):
+        query = 'SELECT c.SCHED_ITEM_ID FROM CONFLICTS c'
+        return query
+
+    def createConflict(self, fields):
+        query = 'select ID,'
+        query += ','.join('t1.' + field for field in fields)
+        query += ' from SCHED_ITEMS t1 where exists (select * from SCHED_ITEMS t2 where '
+        query += ' AND '.join('t1.%s = t2.%s' % (field, field) for field in fields)
+        query += ' AND t1.ID <> t2.ID)'
+        query += ' GROUP BY %s,ID' % ','.join(fields)
         return query
