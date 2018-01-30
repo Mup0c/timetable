@@ -74,10 +74,17 @@ def modifyPage(selected_table, selected_id):
     if not selected_table in tables:
         abort(404)
     selected_table = getattr(metadata, selected_table)
-    row = request.args.get('r', -1, type=int)
-    col = request.args.get('c', -1, type=int)
+    olap_row = request.args.get('r', -1, type=int)
+    olap_col = request.args.get('c', -1, type=int)
     meta = getMeta(selected_table)
     meta.pop(0) #Удалить поле ID, т.к. его нельзя изменять пользователю
+    foreign_keys={}
+    for field in meta:
+        if isinstance(field, metadata.RefField):
+            cur.execute(QueryBuilder.getTableRows(QueryBuilder(), field.referenceTable))
+            foreign_keys[field.viewedName] = cur.fetchall()
+        else:
+            foreign_keys[field.viewedName]=None
     query = QueryBuilder.getRowToModify(QueryBuilder(), selected_table, selected_id, meta)
     cur.execute(query)
     rows = cur.fetchall()
@@ -102,9 +109,10 @@ def modifyPage(selected_table, selected_id):
         selected_id = selected_id,
         selected_table = selected_table,
         row = newValues,
-        olap_row=row,
-        olap_col=col,
-        meta = meta
+        olap_row=olap_row,
+        olap_col=olap_col,
+        meta = meta,
+        foreign_keys=foreign_keys
     )
 
 @app.route("/insert/<string:selected_table>/")
@@ -229,11 +237,9 @@ def conflict(type_id = 0):
     query = QueryBuilder.getConflict(QueryBuilder(), table, meta, type_id)
     cur.execute(query)
     rows = cur.fetchall()
-    conflicts_by_groups = [[]]
+    conflicts_by_groups = []
     last_group_id = -1
     for conflict in rows:
-        if conflict == rows[0]:
-            last_group_id = conflict[0]
         if conflict[0] != last_group_id:
             conflicts_by_groups.append([])
         conflicts_by_groups[-1].append(conflict[1:])

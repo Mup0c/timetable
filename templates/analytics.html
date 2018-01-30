@@ -94,11 +94,11 @@
          function drop(ev) {
              ev.preventDefault();
              var data = ev.dataTransfer.getData("id");
-             href = "/modify/SCHED_ITEMS/"+data+"/?{{meta[selected_col].colName}}="+ev.target.getAttribute('cval')+""+
-               "&{{meta[selected_row].colName}}="+ev.target.getAttribute('rval')+"";
+             href = "/modify/SCHED_ITEMS/"+data+"/?{{meta[selected_col].colName}}="+ev.target.getAttribute('cval')+
+               "&{{meta[selected_row].colName}}="+ev.target.getAttribute('rval');
              $.ajax({
                 url: href,
-                success: setTimeout("location.reload(true);", 200)
+                success: function (){location.reload(true);}
              });
          }
      </script>
